@@ -233,6 +233,43 @@
       gap: 10px;
     }
 
+    .cep-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 16px;
+    }
+
+    .cep-row .input {
+      flex: 1 1 180px;
+      min-width: 140px;
+    }
+
+    .cep-unknown {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: #334155;
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .cep-unknown input {
+      width: 1rem;
+      height: 1rem;
+      accent-color: #2563eb;
+      cursor: pointer;
+    }
+
+    .input:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      background: #f1f5f9;
+    }
+
     .field label {
       display: block;
       margin-bottom: 7px;
@@ -513,7 +550,13 @@
           <!-- BLOCO 16.5: CEP + consulta automatica -->
           <div class="field">
             <label for="cep">CEP</label>
-            <input class="input" id="cep" name="cep" type="text" inputmode="numeric" autocomplete="postal-code" required placeholder="00000-000" />
+            <div class="cep-row">
+              <input class="input" id="cep" name="cep" type="text" inputmode="numeric" autocomplete="postal-code" required placeholder="00000-000" aria-describedby="addressStatus" />
+              <label class="cep-unknown">
+                <input type="checkbox" id="unknownCep" name="unknownCep" />
+                Não sei o CEP
+              </label>
+            </div>
             <div class="address-status" id="addressStatus" aria-live="polite"></div>
           </div>
 
@@ -556,7 +599,7 @@
   <!-- [SECAO 17] RODAPE COM INFORMACOES LEGAIS + VERSAO -->
   <footer>
     <div class="container footer-inner">
-      <div>Desde 2026 - Todos os direitos reservados a Logan Technology © | v1.3.0</div>
+      <div>Desde 2026 - Todos os direitos reservados a Logan Technology © | v1.4.0</div>
       <div>
         <a href="https://logan.com.br/politica-de-privacidade-e-cookies/" target="_blank" rel="noopener noreferrer">
           Política de Privacidade
@@ -573,7 +616,7 @@
        ========================================================= */
     // Endpoint interno da API segura (proxy server-side para o n8n)
     const WEBHOOK_URL = "/lead";
-    const WHATSAPP_BASE_URL = "https://api.whatsapp.com/send/?phone=5521995962757&text=";
+    const WHATSAPP_BASE_URL = "https://api.whatsapp.com/send/?phone=5521976634893&text=";
 
     /* [SECAO 19] CACHE DE ELEMENTOS DO DOM */
     const form = document.getElementById("lead-form");
@@ -584,6 +627,7 @@
     const phoneCountry = document.getElementById("phoneCountry");
     const phoneInput = document.getElementById("phone");
     const cepInput = document.getElementById("cep");
+    const unknownCepCheckbox = document.getElementById("unknownCep");
     const addressGroup = document.getElementById("addressGroup");
     const addressStatus = document.getElementById("addressStatus");
     const addressStreetInput = document.getElementById("addressStreet");
@@ -597,7 +641,8 @@
     const docStatus = document.getElementById("docStatus");
     const docTypeBadge = document.getElementById("docTypeBadge");
     const confettiLayer = document.getElementById("confettiLayer");
-    const DRAFT_STORAGE_KEY = "logan-form-draft-v1.2.0";
+    const DRAFT_STORAGE_KEY = "logan-form-draft-v1.3.0";
+    const CEP_UNKNOWN_SENTINEL = "Não informado";
     let documentValidated = false;
 
     /* [SECAO 20] HELPERS GERAIS */
@@ -779,6 +824,30 @@
       }
     }
 
+    function syncUnknownCepUi() {
+      const unknown = unknownCepCheckbox.checked;
+      if (unknown) {
+        cepInput.disabled = true;
+        cepInput.removeAttribute("required");
+        cepInput.value = "";
+        cepInput.setAttribute("aria-invalid", "false");
+        addressGroup.classList.add("visible");
+        addressStatus.className = "address-status";
+        addressStatus.textContent = "Preencha o endereço manualmente.";
+      } else {
+        cepInput.disabled = false;
+        cepInput.setAttribute("required", "");
+        addressStatus.className = "address-status";
+        addressStatus.textContent = "";
+        const d = digitsOnly(cepInput.value);
+        if (d.length !== 8) {
+          addressGroup.classList.remove("visible");
+        } else {
+          lookupCepAndSuggestAddress();
+        }
+      }
+    }
+
     /* [SECAO 27] DRAFT LOCAL (RECUPERACAO DE FORMULARIO) */
     function saveDraft() {
       const payload = {
@@ -788,6 +857,7 @@
         phoneCountry: phoneCountry.value,
         phone: phoneInput.value,
         cep: cepInput.value,
+        unknownCep: unknownCepCheckbox.checked,
         addressStreet: addressStreetInput.value,
         addressNumber: addressNumberInput.value,
         addressDistrict: addressDistrictInput.value,
@@ -808,14 +878,25 @@
         if (draft.email) emailInput.value = draft.email;
         if (draft.phoneCountry) phoneCountry.value = draft.phoneCountry;
         if (draft.phone) phoneInput.value = draft.phone;
-        if (draft.cep) cepInput.value = draft.cep;
+        if (typeof draft.unknownCep === "boolean") unknownCepCheckbox.checked = draft.unknownCep;
+        if (draft.unknownCep) {
+          syncUnknownCepUi();
+        } else if (draft.cep) {
+          cepInput.value = draft.cep;
+        }
         if (draft.addressStreet) addressStreetInput.value = draft.addressStreet;
         if (draft.addressNumber) addressNumberInput.value = draft.addressNumber;
         if (draft.addressDistrict) addressDistrictInput.value = draft.addressDistrict;
         if (draft.addressCity) addressCityInput.value = draft.addressCity;
         if (draft.addressState) addressStateInput.value = draft.addressState;
         if (draft.addressComplement) addressComplementInput.value = draft.addressComplement;
-        if (addressStreetInput.value || addressDistrictInput.value || addressCityInput.value || addressStateInput.value) {
+        if (
+          unknownCepCheckbox.checked ||
+          addressStreetInput.value ||
+          addressDistrictInput.value ||
+          addressCityInput.value ||
+          addressStateInput.value
+        ) {
           addressGroup.classList.add("visible");
         }
       } catch (error) {
@@ -1008,6 +1089,13 @@
 
     /* [SECAO 30] AUTO PREENCHIMENTO DE ENDERECO VIA VIACEP */
     async function lookupCepAndSuggestAddress() {
+      if (unknownCepCheckbox.checked) {
+        addressGroup.classList.add("visible");
+        addressStatus.className = "address-status";
+        addressStatus.textContent = "Preencha o endereço manualmente.";
+        return true;
+      }
+
       const cepDigits = digitsOnly(cepInput.value);
       addressStatus.className = "address-status";
 
@@ -1104,6 +1192,7 @@
       saveDraftDebounced();
     });
     cepInput.addEventListener("input", () => {
+      if (unknownCepCheckbox.checked) return;
       cepInput.value = formatCEP(cepInput.value);
       addressStatus.className = "address-status";
       addressStatus.textContent = "";
@@ -1113,6 +1202,10 @@
       saveDraftDebounced();
     });
     cepInput.addEventListener("blur", lookupCepAndSuggestAddress);
+    unknownCepCheckbox.addEventListener("change", () => {
+      syncUnknownCepUi();
+      saveDraftDebounced();
+    });
     [
       nameInput,
       addressStreetInput,
@@ -1139,7 +1232,8 @@
       const name = document.getElementById("name").value.trim();
       const email = document.getElementById("email").value.trim();
       const phone = phoneInput.value.trim();
-      const cep = cepInput.value.trim();
+      const unknownCep = unknownCepCheckbox.checked;
+      const cep = unknownCep ? CEP_UNKNOWN_SENTINEL : cepInput.value.trim();
       const emailOk = validateEmailRealtime();
       const country = phoneCountry.value;
       const docDigits = digitsOnly(documentValue);
@@ -1151,9 +1245,15 @@
       const addressState = addressStateInput.value.trim().toUpperCase();
       const addressComplement = addressComplementInput.value.trim();
 
-      if (!documentValue || !name || !email || !phone || !country || !cep) {
+      if (!documentValue || !name || !email || !phone || !country) {
         statusMessage.classList.add("error");
         statusMessage.textContent = "Preencha todos os campos obrigatórios.";
+        return;
+      }
+
+      if (!unknownCep && !cepInput.value.trim()) {
+        statusMessage.classList.add("error");
+        statusMessage.textContent = "Informe o CEP ou marque \"Não sei o CEP\".";
         return;
       }
 
@@ -1163,7 +1263,7 @@
         return;
       }
 
-      if (digitsOnly(cep).length !== 8) {
+      if (!unknownCep && digitsOnly(cepInput.value).length !== 8) {
         statusMessage.classList.add("error");
         statusMessage.textContent = "CEP inválido. Informe 8 dígitos.";
         return;
@@ -1192,7 +1292,13 @@
         return;
       }
 
-      if (!addressStreet || !addressDistrict || !addressCity || !addressState) {
+      if (unknownCep) {
+        if (!addressStreet || !addressNumber || !addressDistrict || !addressCity || !addressState) {
+          statusMessage.classList.add("error");
+          statusMessage.textContent = "Preencha o endereço completo (rua, número, bairro, cidade e UF).";
+          return;
+        }
+      } else if (!addressStreet || !addressDistrict || !addressCity || !addressState) {
         const cepLookupOk = await lookupCepAndSuggestAddress();
         if (!cepLookupOk && (!addressStreetInput.value.trim() || !addressDistrictInput.value.trim() || !addressCityInput.value.trim() || !addressStateInput.value.trim())) {
           statusMessage.classList.add("error");

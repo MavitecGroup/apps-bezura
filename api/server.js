@@ -40,7 +40,22 @@ const leadSchema = z.object({
   email: z.email().max(180),
   phoneCountry: z.enum(["BR", "PT", "US", "AR"]),
   phone: z.string().trim().min(8).max(32),
-  cep: z.string().trim().min(8).max(9),
+  cep: z
+    .string()
+    .trim()
+    .max(36)
+    .refine(
+      (value) => {
+        const digits = value.replace(/\D/g, "");
+        if (digits.length === 8) return true;
+        const n = value
+          .normalize("NFD")
+          .replace(/\p{M}/gu, "")
+          .toLowerCase();
+        return n === "nao informado";
+      },
+      { message: "CEP deve ter 8 digitos ou ser enviado como nao informado" }
+    ),
   addressStreet: z.string().trim().min(2).max(180),
   addressNumber: z.string().trim().max(20).optional().default(""),
   addressDistrict: z.string().trim().min(2).max(120),

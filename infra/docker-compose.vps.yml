@@ -1,0 +1,44 @@
+services:
+  cadastro-site:
+    image: nginx:alpine
+    container_name: cadastro-site
+    restart: unless-stopped
+    volumes:
+      - ../web/index.html:/usr/share/nginx/html/index.html:ro
+      - ../web/logan-logo.png:/usr/share/nginx/html/logan-logo.png:ro
+      - ../web/logan-technology-logomarca-.png:/usr/share/nginx/html/logan-technology-logomarca-.png:ro
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=n8n_default
+      - traefik.http.routers.cadastro-site.rule=Host(`cadastro.bezura.com.br`)
+      - traefik.http.routers.cadastro-site.entrypoints=web,websecure
+      - traefik.http.routers.cadastro-site.tls=true
+      - traefik.http.routers.cadastro-site.tls.certresolver=mytlschallenge
+      - traefik.http.routers.cadastro-site.priority=10
+      - traefik.http.services.cadastro-site.loadbalancer.server.port=80
+    networks:
+      - n8n_default
+
+  cadastro-api:
+    build:
+      context: ../api
+      dockerfile: Dockerfile
+    container_name: cadastro-api
+    restart: unless-stopped
+    env_file:
+      - ../api/.env
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=n8n_default
+      - traefik.http.routers.cadastro-api.rule=Host(`cadastro.bezura.com.br`) && Path(`/lead`)
+      - traefik.http.routers.cadastro-api.entrypoints=web,websecure
+      - traefik.http.routers.cadastro-api.tls=true
+      - traefik.http.routers.cadastro-api.tls.certresolver=mytlschallenge
+      - traefik.http.routers.cadastro-api.priority=100
+      - traefik.http.services.cadastro-api.loadbalancer.server.port=3000
+    networks:
+      - n8n_default
+
+networks:
+  n8n_default:
+    external: true

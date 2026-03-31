@@ -1,12 +1,20 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
+  <!-- =========================================================
+       [SECAO 1] METADADOS DA PAGINA
+       - Define charset, responsividade e SEO basico
+       ========================================================= -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Logan Technology | Cadastro</title>
   <meta name="description" content="Formulário de cadastro integrado ao Gestão Logan." />
   <link rel="icon" type="image/png" href="./logan-logo.png" />
   <style>
+    /* =========================================================
+       [SECAO 2] DESIGN TOKENS / VARIAVEIS GLOBAIS
+       - Paleta, superficies e sombra base
+       ========================================================= */
     :root {
       --bg: #f4f8ff;
       --surface: #ffffff;
@@ -18,8 +26,10 @@
       --shadow: 0 18px 40px rgba(27, 63, 138, 0.12);
     }
 
+    /* [SECAO 3] RESET E BASE DE LAYOUT */
     * { box-sizing: border-box; }
 
+    /* [SECAO 4] BACKGROUND PRINCIPAL + EFEITO DE MOVIMENTO */
     body {
       margin: 0;
       font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
@@ -72,6 +82,7 @@
       mix-blend-mode: soft-light;
     }
 
+    /* [SECAO 5] CAMADA DE PARTICULAS DECORATIVAS */
     #particles {
       position: fixed;
       inset: 0;
@@ -89,6 +100,7 @@
       filter: blur(0.1px) drop-shadow(0 0 6px rgba(255, 255, 255, 0.55));
     }
 
+    /* [SECAO 6] ESTRUTURA DE CONTEINER E BLOCOS */
     .container {
       width: min(1140px, 92vw);
       margin: 0 auto;
@@ -191,6 +203,7 @@
       flex-shrink: 0;
     }
 
+    /* [SECAO 7] CAMPOS DO FORMULARIO */
     .field {
       margin-bottom: 14px;
     }
@@ -263,6 +276,7 @@
     .submit-btn:hover { filter: brightness(1.04); transform: translateY(-1px); }
     .submit-btn:disabled { opacity: .7; cursor: not-allowed; transform: none; }
 
+    /* [SECAO 8] MENSAGENS DE STATUS (SUCESSO/ERRO) */
     .status {
       margin-top: 12px;
       min-height: 20px;
@@ -273,6 +287,7 @@
     .status.ok { color: #0f766e; }
     .status.error { color: #b91c1c; }
 
+    /* [SECAO 9] FEEDBACKS ESPECIFICOS (DOCUMENTO/EMAIL/SKELETON) */
     .doc-status {
       margin-top: 7px;
       font-size: .82rem;
@@ -284,6 +299,53 @@
     .doc-status.error { color: #b91c1c; }
     .doc-status.loading { color: #1d4ed8; }
 
+    .doc-type-badge {
+      display: inline-flex;
+      margin-top: 7px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .01em;
+      background: #e2e8f0;
+      color: #334155;
+      min-height: 20px;
+      align-items: center;
+    }
+
+    .doc-type-badge.hidden {
+      display: none;
+    }
+
+    .doc-type-badge.cpf {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .doc-type-badge.cnpj {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .email-status {
+      margin-top: 7px;
+      font-size: .82rem;
+      min-height: 18px;
+      color: #64748b;
+    }
+
+    .email-status.ok { color: #0f766e; }
+    .email-status.error { color: #b91c1c; }
+    .email-status.warn { color: #b45309; }
+
+    .skeleton-loading {
+      border-color: #dbe7ff;
+      background: linear-gradient(90deg, #eef4ff 25%, #dde9ff 50%, #eef4ff 75%);
+      background-size: 220% 100%;
+      animation: skeletonPulse 1.1s ease-in-out infinite;
+    }
+
+    /* [SECAO 10] EFEITOS DE CONFETE POS-CADASTRO */
     .confetti-layer {
       position: fixed;
       inset: 0;
@@ -302,6 +364,7 @@
     }
 
 
+    /* [SECAO 11] RODAPE INSTITUCIONAL + VERSIONAMENTO */
     footer {
       margin-top: 18px;
       border-top: 1px solid var(--line);
@@ -331,6 +394,9 @@
       .phone-row { grid-template-columns: 1fr; gap: 8px; }
     }
 
+    /* =========================================================
+       [SECAO 12] ANIMACOES
+       ========================================================= */
     @keyframes gradientShift {
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
@@ -369,17 +435,28 @@
       100% { transform: translateY(108vh) rotate(720deg); opacity: 0.1; }
     }
 
+    @keyframes skeletonPulse {
+      0% { background-position: 200% 0; }
+      100% { background-position: -20% 0; }
+    }
+
   </style>
 </head>
 <body>
+  <!-- =========================================================
+       [SECAO 13] CAMADAS VISUAIS
+       - Particulas de fundo e confete de sucesso
+       ========================================================= -->
   <div id="particles" aria-hidden="true"></div>
   <div id="confettiLayer" class="confetti-layer" aria-hidden="true"></div>
+  <!-- [SECAO 14] CABECALHO COM IDENTIDADE DA MARCA -->
   <header>
     <div class="container header-row">
       <img class="logo" src="./logan-technology-logomarca-.png" alt="Logan Technology" />
     </div>
   </header>
 
+  <!-- [SECAO 15] AREA PRINCIPAL COM FORMULARIO DE CAPTACAO -->
   <main class="container">
     <section class="hero">
       <aside class="card">
@@ -396,23 +473,30 @@
           <p>Preencha seus dados para prepararmos seu orçamento.</p>
         </div>
 
+        <!-- [SECAO 16] FORMULARIO PRINCIPAL -->
         <form id="lead-form" novalidate>
+          <!-- BLOCO 16.1: Documento + validacao -->
           <div class="field">
             <label for="document">CPF ou CNPJ</label>
             <input class="input" id="document" name="document" type="text" inputmode="numeric" autocomplete="off" required placeholder="000.000.000-00" />
             <div class="doc-status" id="docStatus" aria-live="polite"></div>
+            <div class="doc-type-badge hidden" id="docTypeBadge" aria-live="polite"></div>
           </div>
 
+          <!-- BLOCO 16.2: Identificacao do lead -->
           <div class="field">
             <label for="name">Nome</label>
             <input class="input" id="name" name="name" type="text" autocomplete="name" required placeholder="Seu nome completo" />
           </div>
 
+          <!-- BLOCO 16.3: Contato -->
           <div class="field">
             <label for="email">E-mail</label>
             <input class="input" id="email" name="email" type="email" autocomplete="email" required placeholder="voce@empresa.com" />
+            <div class="email-status" id="emailStatus" aria-live="polite"></div>
           </div>
 
+          <!-- BLOCO 16.4: Telefone internacional -->
           <div class="field">
             <label for="phone">Telefone</label>
             <div class="phone-row">
@@ -426,12 +510,14 @@
             </div>
           </div>
 
+          <!-- BLOCO 16.5: CEP + consulta automatica -->
           <div class="field">
             <label for="cep">CEP</label>
             <input class="input" id="cep" name="cep" type="text" inputmode="numeric" autocomplete="postal-code" required placeholder="00000-000" />
             <div class="address-status" id="addressStatus" aria-live="polite"></div>
           </div>
 
+          <!-- BLOCO 16.6: Endereco (auto preenchimento + manual) -->
           <div class="address-group" id="addressGroup">
             <div class="field">
               <label for="addressStreet">Endereço</label>
@@ -459,6 +545,7 @@
             </div>
           </div>
 
+          <!-- BLOCO 16.7: Acao principal -->
           <button class="submit-btn" type="submit" id="submitBtn">Enviar Cadastro</button>
           <div class="status" id="statusMessage" aria-live="polite"></div>
         </form>
@@ -466,9 +553,10 @@
     </section>
   </main>
 
+  <!-- [SECAO 17] RODAPE COM INFORMACOES LEGAIS + VERSAO -->
   <footer>
     <div class="container footer-inner">
-      <div>Desde 2026 - Todos os direitos reservados a Logan Technology ©</div>
+      <div>Desde 2026 - Todos os direitos reservados a Logan Technology © | v1.3.0</div>
       <div>
         <a href="https://logan.com.br/politica-de-privacidade-e-cookies/" target="_blank" rel="noopener noreferrer">
           Política de Privacidade
@@ -479,14 +567,20 @@
   </footer>
 
   <script>
-    // Troque para a URL real do seu Webhook do n8n:
-    const WEBHOOK_URL = "https://n8n.bezura.cloud/webhook/fa367a98-126a-4b90-b077-bb35930e792e";
+    /* =========================================================
+       [SECAO 18] CONFIGURACOES DE INTEGRACAO
+       - WEBHOOK_URL aponta para API interna /lead
+       ========================================================= */
+    // Endpoint interno da API segura (proxy server-side para o n8n)
+    const WEBHOOK_URL = "/lead";
     const WHATSAPP_BASE_URL = "https://api.whatsapp.com/send/?phone=5521995962757&text=";
 
+    /* [SECAO 19] CACHE DE ELEMENTOS DO DOM */
     const form = document.getElementById("lead-form");
     const docInput = document.getElementById("document");
     const nameInput = document.getElementById("name");
     const emailInput = document.getElementById("email");
+    const emailStatus = document.getElementById("emailStatus");
     const phoneCountry = document.getElementById("phoneCountry");
     const phoneInput = document.getElementById("phone");
     const cepInput = document.getElementById("cep");
@@ -501,13 +595,17 @@
     const statusMessage = document.getElementById("statusMessage");
     const submitBtn = document.getElementById("submitBtn");
     const docStatus = document.getElementById("docStatus");
+    const docTypeBadge = document.getElementById("docTypeBadge");
     const confettiLayer = document.getElementById("confettiLayer");
+    const DRAFT_STORAGE_KEY = "logan-form-draft-v1.2.0";
     let documentValidated = false;
 
+    /* [SECAO 20] HELPERS GERAIS */
     function digitsOnly(value) {
       return value.replace(/\D/g, "");
     }
 
+    /* [SECAO 21] EFEITOS VISUAIS (PARTICULAS / CONFETE) */
     function createParticles() {
       const particleContainer = document.getElementById("particles");
       const particleCount = 160;
@@ -532,6 +630,15 @@
 
     }
 
+    /* [SECAO 22] DEBOUNCE PARA REDUZIR CHAMADAS EXCESSIVAS */
+    function debounce(fn, delay = 450) {
+      let timeoutId;
+      return (...args) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => fn(...args), delay);
+      };
+    }
+
     function runConfetti(count = 130) {
       const colors = ["#22c55e", "#3b82f6", "#f97316", "#eab308", "#ec4899", "#14b8a6"];
       for (let i = 0; i < count; i++) {
@@ -549,6 +656,7 @@
       }
     }
 
+    /* [SECAO 23] MENSAGEM DE WHATSAPP POS-CADASTRO */
     function buildWhatsappMessage(data) {
       return [
         "*🚀 Cadastro realizado! ✅*",
@@ -565,6 +673,7 @@
       ].join("\n");
     }
 
+    /* [SECAO 24] MASCARAS E VALIDACOES DE DOCUMENTO */
     function formatCPF(value) {
       const digits = digitsOnly(value).slice(0, 11);
       return digits
@@ -584,6 +693,134 @@
 
     function isRepeatedDigits(value) {
       return /^(\d)\1+$/.test(value);
+    }
+
+    /* [SECAO 25] UX: BADGE DE TIPO CPF/CNPJ */
+    function updateDocTypeBadge() {
+      const digits = digitsOnly(docInput.value);
+      docTypeBadge.className = "doc-type-badge";
+      if (!digits.length) {
+        docTypeBadge.classList.add("hidden");
+        docTypeBadge.textContent = "";
+        return;
+      }
+      if (digits.length <= 11) {
+        docTypeBadge.classList.add("cpf");
+        docTypeBadge.textContent = "Pessoa Fisica (CPF)";
+      } else {
+        docTypeBadge.classList.add("cnpj");
+        docTypeBadge.textContent = "Pessoa Juridica (CNPJ)";
+      }
+    }
+
+    /* [SECAO 26] VALIDACAO DE EMAIL E SUGESTAO DE DOMINIOS */
+    function getEmailSuggestion(email) {
+      const normalized = String(email || "").trim().toLowerCase();
+      const typoCorrections = {
+        "gmail.con": "gmail.com",
+        "gmail,com": "gmail.com",
+        "gmal.com": "gmail.com",
+        "gmial.com": "gmail.com",
+        "hotmial.com": "hotmail.com",
+        "outlok.com": "outlook.com",
+        "yaho.com": "yahoo.com"
+      };
+      const parts = normalized.split("@");
+      if (parts.length !== 2) return "";
+      const [local, domain] = parts;
+      if (!local || !domain) return "";
+      if (typoCorrections[domain]) {
+        return `${local}@${typoCorrections[domain]}`;
+      }
+      return "";
+    }
+
+    function validateEmailRealtime() {
+      const email = emailInput.value.trim();
+      emailStatus.className = "email-status";
+      emailStatus.textContent = "";
+      if (!email) return false;
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+      const isValid = emailRegex.test(email);
+      const suggestion = getEmailSuggestion(email);
+
+      if (!isValid) {
+        emailStatus.classList.add("error");
+        emailStatus.textContent = "E-mail com formato invalido. Exemplo: nome@empresa.com";
+        if (suggestion) {
+          emailStatus.className = "email-status warn";
+          emailStatus.textContent = `Voce quis dizer: ${suggestion}?`;
+        }
+        return false;
+      }
+
+      if (suggestion && suggestion !== email.toLowerCase()) {
+        emailStatus.className = "email-status warn";
+        emailStatus.textContent = `Possivel correcao: ${suggestion}`;
+        return true;
+      }
+
+      emailStatus.classList.add("ok");
+      emailStatus.textContent = "E-mail valido.";
+      return true;
+    }
+
+    function setAddressSkeletonLoading(loading) {
+      const addressInputs = [
+        addressStreetInput,
+        addressDistrictInput,
+        addressCityInput,
+        addressStateInput,
+        addressComplementInput
+      ];
+      for (const input of addressInputs) {
+        input.classList.toggle("skeleton-loading", loading);
+      }
+    }
+
+    /* [SECAO 27] DRAFT LOCAL (RECUPERACAO DE FORMULARIO) */
+    function saveDraft() {
+      const payload = {
+        document: docInput.value,
+        name: nameInput.value,
+        email: emailInput.value,
+        phoneCountry: phoneCountry.value,
+        phone: phoneInput.value,
+        cep: cepInput.value,
+        addressStreet: addressStreetInput.value,
+        addressNumber: addressNumberInput.value,
+        addressDistrict: addressDistrictInput.value,
+        addressCity: addressCityInput.value,
+        addressState: addressStateInput.value,
+        addressComplement: addressComplementInput.value
+      };
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(payload));
+    }
+
+    function restoreDraft() {
+      try {
+        const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+        if (!raw) return;
+        const draft = JSON.parse(raw);
+        if (draft.document) docInput.value = draft.document;
+        if (draft.name) nameInput.value = draft.name;
+        if (draft.email) emailInput.value = draft.email;
+        if (draft.phoneCountry) phoneCountry.value = draft.phoneCountry;
+        if (draft.phone) phoneInput.value = draft.phone;
+        if (draft.cep) cepInput.value = draft.cep;
+        if (draft.addressStreet) addressStreetInput.value = draft.addressStreet;
+        if (draft.addressNumber) addressNumberInput.value = draft.addressNumber;
+        if (draft.addressDistrict) addressDistrictInput.value = draft.addressDistrict;
+        if (draft.addressCity) addressCityInput.value = draft.addressCity;
+        if (draft.addressState) addressStateInput.value = draft.addressState;
+        if (draft.addressComplement) addressComplementInput.value = draft.addressComplement;
+        if (addressStreetInput.value || addressDistrictInput.value || addressCityInput.value || addressStateInput.value) {
+          addressGroup.classList.add("visible");
+        }
+      } catch (error) {
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+      }
     }
 
     function validateCPF(cpf) {
@@ -615,9 +852,13 @@
       return first === Number(digits[12]) && second === Number(digits[13]);
     }
 
+    /* [SECAO 28] VALIDACAO CPF/CNPJ + ENRIQUECIMENTO VIA BRASILAPI */
     async function validateDocumentWithReceita() {
       const documentValue = docInput.value.trim();
       const digits = digitsOnly(documentValue);
+      if (digits.length !== 11 && digits.length !== 14) {
+        return false;
+      }
       const type = digits.length <= 11 ? "CPF" : "CNPJ";
       documentValidated = false;
       docStatus.className = "doc-status";
@@ -629,7 +870,7 @@
         const isValidCPF = validateCPF(digits);
         if (!isValidCPF) {
           docStatus.classList.add("error");
-          docStatus.textContent = "CPF inválido.";
+          docStatus.textContent = "CPF invalido: os digitos verificadores nao conferem.";
           return false;
         }
         documentValidated = true;
@@ -641,7 +882,7 @@
       const isValidCNPJ = validateCNPJ(digits);
       if (!isValidCNPJ) {
         docStatus.classList.add("error");
-        docStatus.textContent = "CNPJ inválido.";
+        docStatus.textContent = "CNPJ invalido: os digitos verificadores nao conferem.";
         return false;
       }
 
@@ -681,6 +922,7 @@
       }
     }
 
+    /* [SECAO 29] MASCARAS INTERNACIONAIS DE TELEFONE E CEP */
     function applyMask() {
       const digits = digitsOnly(docInput.value);
       if (digits.length > 11) {
@@ -764,6 +1006,7 @@
         : limited.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
     }
 
+    /* [SECAO 30] AUTO PREENCHIMENTO DE ENDERECO VIA VIACEP */
     async function lookupCepAndSuggestAddress() {
       const cepDigits = digitsOnly(cepInput.value);
       addressStatus.className = "address-status";
@@ -777,6 +1020,8 @@
 
       addressStatus.classList.add("loading");
       addressStatus.textContent = "Consultando CEP...";
+      addressGroup.classList.add("visible");
+      setAddressSkeletonLoading(true);
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -803,9 +1048,12 @@
         addressStatus.className = "address-status error";
         addressStatus.textContent = "ViaCEP indisponível no momento. Preencha o endereço manualmente.";
         return false;
+      } finally {
+        setAddressSkeletonLoading(false);
       }
     }
 
+    /* [SECAO 31] PREENCHIMENTO AUXILIAR PARA CNPJ (QSA) */
     function pickResponsibleNameFromQSA(receitaData) {
       const qsa = Array.isArray(receitaData.qsa) ? receitaData.qsa : [];
       if (!qsa.length) return "";
@@ -827,24 +1075,61 @@
       return mainResponsible?.nome_socio || qsa[0]?.nome_socio || "";
     }
 
+    /* [SECAO 32] BIND DE EVENTOS DA INTERFACE */
+    const saveDraftDebounced = debounce(saveDraft, 350);
+    const validateDocumentDebounced = debounce(validateDocumentWithReceita, 700);
+    const lookupCepDebounced = debounce(lookupCepAndSuggestAddress, 700);
+
     docInput.addEventListener("input", applyMask);
     docInput.addEventListener("input", () => {
       documentValidated = false;
       docStatus.className = "doc-status";
       docStatus.textContent = "";
+      updateDocTypeBadge();
+      const digits = digitsOnly(docInput.value);
+      if (digits.length === 11 || digits.length === 14) {
+        validateDocumentDebounced();
+      }
+      saveDraftDebounced();
     });
     docInput.addEventListener("blur", validateDocumentWithReceita);
+    emailInput.addEventListener("input", () => {
+      validateEmailRealtime();
+      saveDraftDebounced();
+    });
     phoneCountry.addEventListener("change", applyPhoneMask);
-    phoneInput.addEventListener("input", applyPhoneMask);
+    phoneCountry.addEventListener("change", saveDraftDebounced);
+    phoneInput.addEventListener("input", () => {
+      applyPhoneMask();
+      saveDraftDebounced();
+    });
     cepInput.addEventListener("input", () => {
       cepInput.value = formatCEP(cepInput.value);
       addressStatus.className = "address-status";
       addressStatus.textContent = "";
+      if (digitsOnly(cepInput.value).length === 8) {
+        lookupCepDebounced();
+      }
+      saveDraftDebounced();
     });
     cepInput.addEventListener("blur", lookupCepAndSuggestAddress);
+    [
+      nameInput,
+      addressStreetInput,
+      addressNumberInput,
+      addressDistrictInput,
+      addressCityInput,
+      addressStateInput,
+      addressComplementInput
+    ].forEach((input) => input.addEventListener("input", saveDraftDebounced));
+
+    restoreDraft();
+    updateDocTypeBadge();
+    validateEmailRealtime();
     createParticles();
     applyPhoneMask();
 
+    /* [SECAO 33] SUBMISSAO FINAL DO FORMULARIO */
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       statusMessage.className = "status";
@@ -855,6 +1140,7 @@
       const email = document.getElementById("email").value.trim();
       const phone = phoneInput.value.trim();
       const cep = cepInput.value.trim();
+      const emailOk = validateEmailRealtime();
       const country = phoneCountry.value;
       const docDigits = digitsOnly(documentValue);
       const type = docDigits.length === 11 ? "CPF" : docDigits.length === 14 ? "CNPJ" : "";
@@ -868,6 +1154,12 @@
       if (!documentValue || !name || !email || !phone || !country || !cep) {
         statusMessage.classList.add("error");
         statusMessage.textContent = "Preencha todos os campos obrigatórios.";
+        return;
+      }
+
+      if (!emailOk) {
+        statusMessage.classList.add("error");
+        statusMessage.textContent = "Corrija o e-mail antes de enviar.";
         return;
       }
 
@@ -931,6 +1223,10 @@
           submittedAt: new Date().toISOString()
         };
 
+        // Etapa critica:
+        // 1) API /lead valida payload
+        // 2) API consulta duplicidade no Betel por documento
+        // 3) se nao duplicado, API encaminha ao n8n
         let webhookSent = true;
         try {
           const webhookResponse = await fetch(WEBHOOK_URL, {
@@ -938,7 +1234,23 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
           });
-          if (!webhookResponse.ok) webhookSent = false;
+          if (!webhookResponse.ok) {
+            webhookSent = false;
+            let errorData = null;
+            try {
+              errorData = await webhookResponse.json();
+            } catch (_jsonError) {
+              errorData = null;
+            }
+
+            // Regra de negocio:
+            // Se o documento ja existir, nao envia ao webhook e bloqueia no front.
+            if (webhookResponse.status === 409 || errorData?.code === "CLIENT_ALREADY_EXISTS") {
+              statusMessage.className = "status error";
+              statusMessage.textContent = "Este CPF/CNPJ ja possui cadastro. Verifique os dados ou entre em contato com o suporte.";
+              return;
+            }
+          }
         } catch (webhookError) {
           webhookSent = false;
         }
@@ -949,6 +1261,7 @@
           ? "Cadastro realizado! Redirecionando para o WhatsApp..."
           : "Cadastro iniciado. Redirecionando para o WhatsApp...";
 
+        // Monta mensagem de contexto comercial para WhatsApp.
         const message = buildWhatsappMessage({
           documentType: type,
           document: documentValue,
@@ -966,9 +1279,11 @@
         });
         const redirectUrl = `${WHATSAPP_BASE_URL}${encodeURIComponent(message)}&type=phone_number&app_absent=0`;
 
+        // Delay curto para o usuario ler feedback de sucesso.
         setTimeout(() => {
           window.location.href = redirectUrl;
         }, 1300);
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
       } catch (error) {
         statusMessage.classList.add("error");
         statusMessage.textContent = "Não foi possível processar o cadastro. Tente novamente.";

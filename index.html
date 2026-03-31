@@ -1,0 +1,829 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Logan Technology | Cadastro</title>
+  <meta name="description" content="Formulário de cadastro integrado ao Gestão Logan." />
+  <link rel="icon" type="image/png" href="./logan-logo.png" />
+  <style>
+    :root {
+      --bg: #f4f8ff;
+      --surface: #ffffff;
+      --text: #1c2534;
+      --muted: #6b778b;
+      --line: #dfe8f7;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --shadow: 0 18px 40px rgba(27, 63, 138, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 18%, rgba(56, 189, 248, 0.18), transparent 36%),
+        radial-gradient(circle at 84% 20%, rgba(59, 130, 246, 0.22), transparent 34%),
+        radial-gradient(circle at 72% 80%, rgba(14, 116, 144, 0.2), transparent 38%),
+        linear-gradient(140deg, #0a1737 0%, #0c1f49 34%, #102a5f 66%, #0a1a3d 100%);
+      background-size: 180% 180%;
+      animation: gradientShift 18s ease-in-out infinite;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: -20% -10%;
+      pointer-events: none;
+      z-index: -1;
+      background:
+        radial-gradient(closest-side, rgba(37, 99, 235, 0.2), transparent 72%) 10% 24% / 34% 34% no-repeat,
+        radial-gradient(closest-side, rgba(59, 130, 246, 0.17), transparent 72%) 82% 16% / 26% 26% no-repeat,
+        radial-gradient(closest-side, rgba(30, 64, 175, 0.14), transparent 72%) 74% 76% / 31% 31% no-repeat,
+        radial-gradient(closest-side, rgba(96, 165, 250, 0.12), transparent 72%) 28% 84% / 23% 23% no-repeat;
+      filter: blur(8px);
+      animation: blobsFloat 18s ease-in-out infinite alternate;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: -10%;
+      pointer-events: none;
+      z-index: -1;
+      opacity: .58;
+      background:
+        radial-gradient(2px 2px at 15% 20%, rgba(37, 99, 235, .32), transparent 70%),
+        radial-gradient(2px 2px at 70% 25%, rgba(37, 99, 235, .26), transparent 70%),
+        radial-gradient(3px 3px at 82% 70%, rgba(59, 130, 246, .24), transparent 72%),
+        radial-gradient(2px 2px at 25% 75%, rgba(96, 165, 250, .22), transparent 70%),
+        radial-gradient(1.5px 1.5px at 52% 58%, rgba(37, 99, 235, .2), transparent 70%),
+        radial-gradient(1.5px 1.5px at 38% 36%, rgba(59, 130, 246, .2), transparent 70%);
+      background-size: 220px 220px, 260px 260px, 320px 320px, 280px 280px, 240px 240px, 300px 300px;
+      animation: particlesDrift 26s linear infinite;
+      mix-blend-mode: soft-light;
+    }
+
+    #particles {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 50%;
+      opacity: 0.72;
+      animation: floatUp linear infinite;
+      filter: blur(0.1px) drop-shadow(0 0 6px rgba(255, 255, 255, 0.55));
+    }
+
+    .container {
+      width: min(1140px, 92vw);
+      margin: 0 auto;
+    }
+
+    header {
+      padding: 22px 0;
+      border-bottom: 1px solid rgba(37, 99, 235, 0.08);
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      height: 42px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .contact-btn {
+      border: 0;
+      background: linear-gradient(135deg, var(--primary), #4f86ff);
+      color: #fff;
+      font-weight: 600;
+      border-radius: 999px;
+      padding: 12px 18px;
+      cursor: pointer;
+      transition: transform .15s ease, box-shadow .15s ease;
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
+    }
+
+    .contact-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 26px rgba(37, 99, 235, 0.35);
+    }
+
+    main {
+      flex: 1;
+      display: grid;
+      align-items: center;
+      padding: 42px 0 30px;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: center;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: clamp(18px, 3.5vw, 28px);
+      width: 100%;
+      max-width: 520px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-header {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .card h2 {
+      margin: 0 0 4px;
+      font-size: 1.35rem;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      position: relative;
+    }
+
+
+    .card p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: .95rem;
+      text-align: center;
+    }
+
+    .title-icon {
+      width: 18px;
+      height: 18px;
+      color: #2563eb;
+      flex-shrink: 0;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .phone-row {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 10px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: .92rem;
+      color: #334155;
+      font-weight: 600;
+    }
+
+    .input {
+      width: 100%;
+      border: 1px solid #c8d6f0;
+      background: #fbfdff;
+      border-radius: 12px;
+      padding: 12px 13px;
+      font-size: .98rem;
+      color: #0f172a;
+      outline: none;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .input:focus {
+      border-color: #7da7ff;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+      background: #fff;
+    }
+
+    .submit-btn {
+      width: 100%;
+      margin-top: 6px;
+      border: 0;
+      border-radius: 12px;
+      padding: 13px 16px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      cursor: pointer;
+      transition: filter .15s ease, transform .15s ease;
+    }
+
+    .submit-btn:hover { filter: brightness(1.04); transform: translateY(-1px); }
+    .submit-btn:disabled { opacity: .7; cursor: not-allowed; transform: none; }
+
+    .status {
+      margin-top: 12px;
+      min-height: 20px;
+      font-size: .93rem;
+      color: var(--muted);
+    }
+
+    .status.ok { color: #0f766e; }
+    .status.error { color: #b91c1c; }
+
+    .doc-status {
+      margin-top: 7px;
+      font-size: .82rem;
+      min-height: 18px;
+      color: #64748b;
+    }
+
+    .doc-status.ok { color: #0f766e; }
+    .doc-status.error { color: #b91c1c; }
+    .doc-status.loading { color: #1d4ed8; }
+
+    .confetti-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 9998;
+    }
+
+    .confetti {
+      position: absolute;
+      top: -12px;
+      width: 8px;
+      height: 14px;
+      opacity: 0.9;
+      animation: confettiDrop linear forwards;
+    }
+
+
+    footer {
+      margin-top: 18px;
+      border-top: 1px solid var(--line);
+      background-color: #001034;
+    }
+
+    .footer-inner {
+      padding: 18px 0 28px;
+      color: #d9e6ff;
+      font-size: .9rem;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .footer-inner a {
+      color: #8db5ff;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .footer-inner a:hover { text-decoration: underline; }
+
+    @media (max-width: 520px) {
+      .contact-btn { padding: 10px 14px; font-size: .9rem; }
+      .logo { height: 36px; }
+      .footer-inner { font-size: .84rem; }
+      .phone-row { grid-template-columns: 1fr; gap: 8px; }
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes blobsFloat {
+      0% { transform: translate3d(0, 0, 0) scale(1); }
+      35% { transform: translate3d(-2.2%, 2.4%, 0) scale(1.06) rotate(2deg); }
+      70% { transform: translate3d(1.8%, -1.5%, 0) scale(0.96) rotate(-2deg); }
+      100% { transform: translate3d(2.8%, -2.2%, 0) scale(1.02) rotate(1deg); }
+    }
+
+    @keyframes particlesDrift {
+      0% { transform: translate3d(0, 0, 0); }
+      25% { transform: translate3d(-2.5%, 1.5%, 0); }
+      50% { transform: translate3d(-1%, 3%, 0); }
+      75% { transform: translate3d(2%, 1%, 0); }
+      100% { transform: translate3d(0, 0, 0); }
+    }
+
+    @keyframes floatUp {
+      0% {
+        transform: translateY(105vh) scale(0.2);
+        opacity: 0;
+      }
+      35% { opacity: 0.55; }
+      100% {
+        transform: translateY(-12vh) scale(1);
+        opacity: 0;
+      }
+    }
+
+    @keyframes confettiDrop {
+      0% { transform: translateY(-8px) rotate(0deg); opacity: 0.95; }
+      100% { transform: translateY(108vh) rotate(720deg); opacity: 0.1; }
+    }
+
+  </style>
+</head>
+<body>
+  <div id="particles" aria-hidden="true"></div>
+  <div id="confettiLayer" class="confetti-layer" aria-hidden="true"></div>
+  <header>
+    <div class="container header-row">
+      <img class="logo" src="./logan-technology-logomarca-.png" alt="Logan Technology" />
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <aside class="card">
+        <div class="card-header">
+          <h2>
+            <svg class="title-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="8.5" cy="7" r="4"></circle>
+              <path d="M20 8v6"></path>
+              <path d="M23 11h-6"></path>
+            </svg>
+            <span class="title-text">CADASTRO RÁPIDO</span>
+          </h2>
+          <p>Preencha seus dados para prepararmos seu orçamento.</p>
+        </div>
+
+        <form id="lead-form" novalidate>
+          <div class="field">
+            <label for="document">CPF ou CNPJ</label>
+            <input class="input" id="document" name="document" type="text" inputmode="numeric" autocomplete="off" required placeholder="000.000.000-00" />
+            <div class="doc-status" id="docStatus" aria-live="polite"></div>
+          </div>
+
+          <div class="field">
+            <label for="name">Nome</label>
+            <input class="input" id="name" name="name" type="text" autocomplete="name" required placeholder="Seu nome completo" />
+          </div>
+
+          <div class="field">
+            <label for="email">E-mail</label>
+            <input class="input" id="email" name="email" type="email" autocomplete="email" required placeholder="voce@empresa.com" />
+          </div>
+
+          <div class="field">
+            <label for="phone">Telefone</label>
+            <div class="phone-row">
+              <select class="input" id="phoneCountry" name="phoneCountry" required>
+                <option value="BR">🇧🇷 Brasil (+55)</option>
+                <option value="PT">🇵🇹 Portugal (+351)</option>
+                <option value="US">🇺🇸 Estados Unidos (+1)</option>
+                <option value="AR">🇦🇷 Argentina (+54)</option>
+              </select>
+              <input class="input" id="phone" name="phone" type="text" inputmode="numeric" autocomplete="tel" required placeholder="(11) 91234-5678" />
+            </div>
+          </div>
+
+          <button class="submit-btn" type="submit" id="submitBtn">Enviar Cadastro</button>
+          <div class="status" id="statusMessage" aria-live="polite"></div>
+        </form>
+      </aside>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <div>Desde 2026 - Todos os direitos reservados a Logan Technology ©</div>
+      <div>
+        <a href="https://logan.com.br/politica-de-privacidade-e-cookies/" target="_blank" rel="noopener noreferrer">
+          Política de Privacidade
+        </a>
+      </div>
+      <div>LOGAN TECNOLOGY TECNOLOGIA E SISTEMAS LTDA - CNPJ: 00.739.259/0001-59</div>
+    </div>
+  </footer>
+
+  <script>
+    // Troque para a URL real do seu Webhook do n8n:
+    const WEBHOOK_URL = "https://n8n.bezura.cloud/webhook/fa367a98-126a-4b90-b077-bb35930e792e";
+    const WHATSAPP_BASE_URL = "https://api.whatsapp.com/send/?phone=5521995962757&text=";
+
+    const form = document.getElementById("lead-form");
+    const docInput = document.getElementById("document");
+    const nameInput = document.getElementById("name");
+    const emailInput = document.getElementById("email");
+    const phoneCountry = document.getElementById("phoneCountry");
+    const phoneInput = document.getElementById("phone");
+    const statusMessage = document.getElementById("statusMessage");
+    const submitBtn = document.getElementById("submitBtn");
+    const docStatus = document.getElementById("docStatus");
+    const confettiLayer = document.getElementById("confettiLayer");
+    let documentValidated = false;
+
+    function digitsOnly(value) {
+      return value.replace(/\D/g, "");
+    }
+
+    function createParticles() {
+      const particleContainer = document.getElementById("particles");
+      const particleCount = 160;
+
+      for (let i = 0; i < particleCount; i++) {
+        const p = document.createElement("div");
+        p.classList.add("particle");
+
+        const size = Math.random() * 4.8 + 1.8;
+        const left = Math.random() * 100;
+        const duration = Math.random() * 6 + 7;
+        const delay = Math.random() * 8;
+
+        p.style.width = `${size}px`;
+        p.style.height = `${size}px`;
+        p.style.left = `${left}%`;
+        p.style.animationDuration = `${duration}s`;
+        p.style.animationDelay = `-${delay}s`;
+
+        particleContainer.appendChild(p);
+      }
+
+    }
+
+    function runConfetti(count = 130) {
+      const colors = ["#22c55e", "#3b82f6", "#f97316", "#eab308", "#ec4899", "#14b8a6"];
+      for (let i = 0; i < count; i++) {
+        const item = document.createElement("span");
+        item.className = "confetti";
+        item.style.left = `${Math.random() * 100}%`;
+        item.style.background = colors[Math.floor(Math.random() * colors.length)];
+        item.style.width = `${Math.random() * 6 + 5}px`;
+        item.style.height = `${Math.random() * 10 + 8}px`;
+        item.style.opacity = `${Math.random() * 0.4 + 0.6}`;
+        item.style.animationDuration = `${Math.random() * 1.6 + 1.8}s`;
+        item.style.animationDelay = `${Math.random() * 0.5}s`;
+        confettiLayer.appendChild(item);
+        setTimeout(() => item.remove(), 3200);
+      }
+    }
+
+    function buildWhatsappMessage(data) {
+      return [
+        "*🚀 Cadastro realizado! ✅*",
+        "",
+        "*👤 Nome:* " + data.name,
+        "*📧 E-mail:* " + data.email,
+        "*📱 Telefone:* " + data.phoneCountry + " " + data.phone,
+        "*🧾 Documento:* " + data.documentType + " " + data.document
+      ].join("\n");
+    }
+
+    function formatCPF(value) {
+      const digits = digitsOnly(value).slice(0, 11);
+      return digits
+        .replace(/^(\d{3})(\d)/, "$1.$2")
+        .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+        .replace(/\.(\d{3})(\d)/, ".$1-$2");
+    }
+
+    function formatCNPJ(value) {
+      const digits = digitsOnly(value).slice(0, 14);
+      return digits
+        .replace(/^(\d{2})(\d)/, "$1.$2")
+        .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+        .replace(/\.(\d{3})(\d)/, ".$1/$2")
+        .replace(/(\d{4})(\d)/, "$1-$2");
+    }
+
+    function isRepeatedDigits(value) {
+      return /^(\d)\1+$/.test(value);
+    }
+
+    function validateCPF(cpf) {
+      const digits = digitsOnly(cpf);
+      if (digits.length !== 11 || isRepeatedDigits(digits)) return false;
+      let sum = 0;
+      for (let i = 0; i < 9; i++) sum += Number(digits[i]) * (10 - i);
+      let first = (sum * 10) % 11;
+      if (first === 10) first = 0;
+      if (first !== Number(digits[9])) return false;
+      sum = 0;
+      for (let i = 0; i < 10; i++) sum += Number(digits[i]) * (11 - i);
+      let second = (sum * 10) % 11;
+      if (second === 10) second = 0;
+      return second === Number(digits[10]);
+    }
+
+    function validateCNPJ(cnpj) {
+      const digits = digitsOnly(cnpj);
+      if (digits.length !== 14 || isRepeatedDigits(digits)) return false;
+      const calcDigit = (base, weights) => {
+        let sum = 0;
+        for (let i = 0; i < weights.length; i++) sum += Number(base[i]) * weights[i];
+        const mod = sum % 11;
+        return mod < 2 ? 0 : 11 - mod;
+      };
+      const first = calcDigit(digits.slice(0, 12), [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+      const second = calcDigit(digits.slice(0, 13), [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+      return first === Number(digits[12]) && second === Number(digits[13]);
+    }
+
+    async function validateDocumentWithReceita() {
+      const documentValue = docInput.value.trim();
+      const digits = digitsOnly(documentValue);
+      const type = digits.length <= 11 ? "CPF" : "CNPJ";
+      documentValidated = false;
+      docStatus.className = "doc-status";
+      docStatus.textContent = "";
+
+      if (!documentValue) return false;
+
+      if (type === "CPF") {
+        const isValidCPF = validateCPF(digits);
+        if (!isValidCPF) {
+          docStatus.classList.add("error");
+          docStatus.textContent = "CPF inválido.";
+          return false;
+        }
+        documentValidated = true;
+        docStatus.classList.add("ok");
+        docStatus.textContent = "CPF válido.";
+        return true;
+      }
+
+      const isValidCNPJ = validateCNPJ(digits);
+      if (!isValidCNPJ) {
+        docStatus.classList.add("error");
+        docStatus.textContent = "CNPJ inválido.";
+        return false;
+      }
+
+      docStatus.classList.add("loading");
+      docStatus.textContent = "Consultando CNPJ na base da Receita...";
+      try {
+        const receitaResponse = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${digits}`);
+        if (!receitaResponse.ok) {
+          throw new Error("CNPJ não encontrado.");
+        }
+        const receitaData = await receitaResponse.json();
+
+        if (!nameInput.value.trim()) {
+          const responsibleName = pickResponsibleNameFromQSA(receitaData);
+          nameInput.value = responsibleName || receitaData.razao_social || "";
+        }
+        if (!emailInput.value.trim() && receitaData.email) {
+          emailInput.value = receitaData.email;
+        }
+        if (!phoneInput.value.trim()) {
+          const suggestedPhone = formatPhoneFromReceita(receitaData.ddd_telefone_1, receitaData.telefone_1);
+          if (suggestedPhone) {
+            phoneCountry.value = "BR";
+            phoneInput.value = suggestedPhone;
+            applyPhoneMask();
+          }
+        }
+
+        documentValidated = true;
+        docStatus.className = "doc-status ok";
+        docStatus.textContent = "CNPJ válido na Receita. Sugestões de contato preenchidas quando disponíveis.";
+        return true;
+      } catch (error) {
+        docStatus.className = "doc-status error";
+        docStatus.textContent = "CNPJ inválido ou não localizado na Receita.";
+        return false;
+      }
+    }
+
+    function applyMask() {
+      const digits = digitsOnly(docInput.value);
+      if (digits.length > 11) {
+        docInput.placeholder = "00.000.000/0000-00";
+        docInput.value = formatCNPJ(docInput.value);
+      } else {
+        docInput.placeholder = "000.000.000-00";
+        docInput.value = formatCPF(docInput.value);
+      }
+    }
+
+    function formatPhoneBR(value) {
+      const digits = digitsOnly(value).slice(0, 11);
+      if (digits.length <= 10) {
+        return digits
+          .replace(/^(\d{2})(\d)/, "($1) $2")
+          .replace(/(\d{4})(\d)/, "$1-$2");
+      }
+      return digits
+        .replace(/^(\d{2})(\d)/, "($1) $2")
+        .replace(/(\d{5})(\d)/, "$1-$2");
+    }
+
+    function formatPhonePT(value) {
+      const digits = digitsOnly(value).slice(0, 9);
+      return digits
+        .replace(/^(\d{3})(\d)/, "$1 $2")
+        .replace(/^(\d{3})\s(\d{3})(\d)/, "$1 $2 $3");
+    }
+
+    function formatPhoneUS(value) {
+      const digits = digitsOnly(value).slice(0, 10);
+      return digits
+        .replace(/^(\d{3})(\d)/, "($1) $2")
+        .replace(/(\d{3})(\d)/, "$1-$2");
+    }
+
+    function formatPhoneAR(value) {
+      const digits = digitsOnly(value).slice(0, 10);
+      return digits
+        .replace(/^(\d{2})(\d)/, "$1 $2")
+        .replace(/(\d{4})(\d)/, "$1-$2");
+    }
+
+    function applyPhoneMask() {
+      const country = phoneCountry.value;
+      if (country === "PT") {
+        phoneInput.placeholder = "912 345 678";
+        phoneInput.value = formatPhonePT(phoneInput.value);
+      } else if (country === "US") {
+        phoneInput.placeholder = "(201) 555-0123";
+        phoneInput.value = formatPhoneUS(phoneInput.value);
+      } else if (country === "AR") {
+        phoneInput.placeholder = "11 2345-6789";
+        phoneInput.value = formatPhoneAR(phoneInput.value);
+      } else {
+        phoneInput.placeholder = "(11) 91234-5678";
+        phoneInput.value = formatPhoneBR(phoneInput.value);
+      }
+    }
+
+    function getPhoneValidation(country, digitsLength) {
+      if (country === "BR") return digitsLength === 10 || digitsLength === 11;
+      if (country === "PT") return digitsLength === 9;
+      if (country === "US") return digitsLength === 10;
+      if (country === "AR") return digitsLength === 10;
+      return false;
+    }
+
+    function formatPhoneFromReceita(ddd, phone) {
+      const digits = digitsOnly(`${ddd || ""}${phone || ""}`);
+      if (digits.length < 10) return "";
+      const limited = digits.slice(0, 11);
+      return limited.length === 11
+        ? limited.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3")
+        : limited.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
+    }
+
+    function pickResponsibleNameFromQSA(receitaData) {
+      const qsa = Array.isArray(receitaData.qsa) ? receitaData.qsa : [];
+      if (!qsa.length) return "";
+
+      const priorityKeywords = [
+        "socio administrador",
+        "administrador",
+        "titular",
+        "dono",
+        "presidente",
+        "diretor"
+      ];
+      const normalize = (value) => String(value || "").toLowerCase();
+
+      const mainResponsible = qsa.find((item) =>
+        priorityKeywords.some((keyword) => normalize(item.qualificacao_socio).includes(keyword))
+      );
+
+      return mainResponsible?.nome_socio || qsa[0]?.nome_socio || "";
+    }
+
+    docInput.addEventListener("input", applyMask);
+    docInput.addEventListener("input", () => {
+      documentValidated = false;
+      docStatus.className = "doc-status";
+      docStatus.textContent = "";
+    });
+    docInput.addEventListener("blur", validateDocumentWithReceita);
+    phoneCountry.addEventListener("change", applyPhoneMask);
+    phoneInput.addEventListener("input", applyPhoneMask);
+    createParticles();
+    applyPhoneMask();
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      statusMessage.className = "status";
+      statusMessage.textContent = "";
+
+      const documentValue = docInput.value.trim();
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const phone = phoneInput.value.trim();
+      const country = phoneCountry.value;
+      const docDigits = digitsOnly(documentValue);
+      const type = docDigits.length === 11 ? "CPF" : docDigits.length === 14 ? "CNPJ" : "";
+
+      if (!documentValue || !name || !email || !phone || !country) {
+        statusMessage.classList.add("error");
+        statusMessage.textContent = "Preencha todos os campos obrigatórios.";
+        return;
+      }
+
+      const docLength = docDigits.length;
+      if ((type === "CPF" && docLength !== 11) || (type === "CNPJ" && docLength !== 14)) {
+        statusMessage.classList.add("error");
+        statusMessage.textContent = "Documento inválido para o tipo selecionado.";
+        return;
+      }
+
+      if (!documentValidated) {
+        const validNow = await validateDocumentWithReceita();
+        if (!validNow) {
+          statusMessage.classList.add("error");
+          statusMessage.textContent = "Valide o CPF/CNPJ antes de enviar.";
+          return;
+        }
+      }
+
+      const phoneDigits = digitsOnly(phone).length;
+      if (!getPhoneValidation(country, phoneDigits)) {
+        statusMessage.classList.add("error");
+        statusMessage.textContent = "Telefone inválido para o país selecionado.";
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Enviando...";
+
+      try {
+        const payload = {
+          documentType: type,
+          document: documentValue,
+          name,
+          email,
+          phoneCountry: country,
+          phone,
+          source: "logan-form-web",
+          submittedAt: new Date().toISOString()
+        };
+
+        let webhookSent = true;
+        try {
+          const webhookResponse = await fetch(WEBHOOK_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          if (!webhookResponse.ok) webhookSent = false;
+        } catch (webhookError) {
+          webhookSent = false;
+        }
+
+        runConfetti(150);
+        statusMessage.className = webhookSent ? "status ok" : "status error";
+        statusMessage.textContent = webhookSent
+          ? "Cadastro realizado! Redirecionando para o WhatsApp..."
+          : "Cadastro iniciado. Redirecionando para o WhatsApp...";
+
+        const message = buildWhatsappMessage({
+          documentType: type,
+          document: documentValue,
+          name,
+          email,
+          phoneCountry: country,
+          phone
+        });
+        const redirectUrl = `${WHATSAPP_BASE_URL}${encodeURIComponent(message)}&type=phone_number&app_absent=0`;
+
+        setTimeout(() => {
+          window.location.href = redirectUrl;
+        }, 1300);
+      } catch (error) {
+        statusMessage.classList.add("error");
+        statusMessage.textContent = "Não foi possível processar o cadastro. Tente novamente.";
+      } finally {
+        setTimeout(() => {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Enviar Cadastro";
+        }, 1400);
+      }
+    });
+  </script>
+</body>
+</html>

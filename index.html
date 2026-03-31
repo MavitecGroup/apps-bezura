@@ -195,6 +195,25 @@
       margin-bottom: 14px;
     }
 
+    .address-group {
+      display: none;
+    }
+
+    .address-group.visible {
+      display: block;
+    }
+
+    .address-status {
+      margin-top: 7px;
+      font-size: .82rem;
+      min-height: 18px;
+      color: #64748b;
+    }
+
+    .address-status.ok { color: #0f766e; }
+    .address-status.error { color: #b91c1c; }
+    .address-status.loading { color: #1d4ed8; }
+
     .phone-row {
       display: grid;
       grid-template-columns: 170px 1fr;
@@ -407,6 +426,39 @@
             </div>
           </div>
 
+          <div class="field">
+            <label for="cep">CEP</label>
+            <input class="input" id="cep" name="cep" type="text" inputmode="numeric" autocomplete="postal-code" required placeholder="00000-000" />
+            <div class="address-status" id="addressStatus" aria-live="polite"></div>
+          </div>
+
+          <div class="address-group" id="addressGroup">
+            <div class="field">
+              <label for="addressStreet">Endereço</label>
+              <input class="input" id="addressStreet" name="addressStreet" type="text" autocomplete="street-address" placeholder="Rua / Avenida" />
+            </div>
+            <div class="field">
+              <label for="addressNumber">Número</label>
+              <input class="input" id="addressNumber" name="addressNumber" type="text" inputmode="numeric" placeholder="Número" />
+            </div>
+            <div class="field">
+              <label for="addressDistrict">Bairro</label>
+              <input class="input" id="addressDistrict" name="addressDistrict" type="text" autocomplete="address-level3" placeholder="Bairro" />
+            </div>
+            <div class="field">
+              <label for="addressCity">Cidade</label>
+              <input class="input" id="addressCity" name="addressCity" type="text" autocomplete="address-level2" placeholder="Cidade" />
+            </div>
+            <div class="field">
+              <label for="addressState">UF</label>
+              <input class="input" id="addressState" name="addressState" type="text" maxlength="2" placeholder="UF" />
+            </div>
+            <div class="field">
+              <label for="addressComplement">Complemento</label>
+              <input class="input" id="addressComplement" name="addressComplement" type="text" autocomplete="address-line2" placeholder="Complemento (opcional)" />
+            </div>
+          </div>
+
           <button class="submit-btn" type="submit" id="submitBtn">Enviar Cadastro</button>
           <div class="status" id="statusMessage" aria-live="polite"></div>
         </form>
@@ -437,6 +489,15 @@
     const emailInput = document.getElementById("email");
     const phoneCountry = document.getElementById("phoneCountry");
     const phoneInput = document.getElementById("phone");
+    const cepInput = document.getElementById("cep");
+    const addressGroup = document.getElementById("addressGroup");
+    const addressStatus = document.getElementById("addressStatus");
+    const addressStreetInput = document.getElementById("addressStreet");
+    const addressNumberInput = document.getElementById("addressNumber");
+    const addressDistrictInput = document.getElementById("addressDistrict");
+    const addressCityInput = document.getElementById("addressCity");
+    const addressStateInput = document.getElementById("addressState");
+    const addressComplementInput = document.getElementById("addressComplement");
     const statusMessage = document.getElementById("statusMessage");
     const submitBtn = document.getElementById("submitBtn");
     const docStatus = document.getElementById("docStatus");
@@ -495,7 +556,12 @@
         "*👤 Nome:* " + data.name,
         "*📧 E-mail:* " + data.email,
         "*📱 Telefone:* " + data.phoneCountry + " " + data.phone,
-        "*🧾 Documento:* " + data.documentType + " " + data.document
+        "*🧾 Documento:* " + data.documentType + " " + data.document,
+        "*📮 CEP:* " + data.cep,
+        "*📍 Endereço:* " + data.addressStreet + ", " + data.addressNumber,
+        "*🏘️ Bairro:* " + data.addressDistrict,
+        "*🏙️ Cidade/UF:* " + data.addressCity + "/" + data.addressState,
+        "*➕ Complemento:* " + (data.addressComplement || "-")
       ].join("\n");
     }
 
@@ -659,6 +725,11 @@
         .replace(/(\d{4})(\d)/, "$1-$2");
     }
 
+    function formatCEP(value) {
+      const digits = digitsOnly(value).slice(0, 8);
+      return digits.replace(/^(\d{5})(\d)/, "$1-$2");
+    }
+
     function applyPhoneMask() {
       const country = phoneCountry.value;
       if (country === "PT") {
@@ -693,6 +764,48 @@
         : limited.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
     }
 
+    async function lookupCepAndSuggestAddress() {
+      const cepDigits = digitsOnly(cepInput.value);
+      addressStatus.className = "address-status";
+
+      if (cepDigits.length !== 8) {
+        addressGroup.classList.remove("visible");
+        addressStatus.classList.add("error");
+        addressStatus.textContent = "CEP inválido. Informe 8 dígitos.";
+        return false;
+      }
+
+      addressStatus.classList.add("loading");
+      addressStatus.textContent = "Consultando CEP...";
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const response = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`, {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (!response.ok) throw new Error("Falha na consulta.");
+        const data = await response.json();
+        if (data.erro) throw new Error("CEP não encontrado.");
+
+        addressStreetInput.value = data.logradouro || "";
+        addressDistrictInput.value = data.bairro || "";
+        addressCityInput.value = data.localidade || "";
+        addressStateInput.value = data.uf || "";
+        if (!addressComplementInput.value) addressComplementInput.value = data.complemento || "";
+
+        addressGroup.classList.add("visible");
+        addressStatus.className = "address-status ok";
+        addressStatus.textContent = "CEP localizado. Confira e complete o endereço.";
+        return true;
+      } catch (error) {
+        addressGroup.classList.add("visible");
+        addressStatus.className = "address-status error";
+        addressStatus.textContent = "ViaCEP indisponível no momento. Preencha o endereço manualmente.";
+        return false;
+      }
+    }
+
     function pickResponsibleNameFromQSA(receitaData) {
       const qsa = Array.isArray(receitaData.qsa) ? receitaData.qsa : [];
       if (!qsa.length) return "";
@@ -723,6 +836,12 @@
     docInput.addEventListener("blur", validateDocumentWithReceita);
     phoneCountry.addEventListener("change", applyPhoneMask);
     phoneInput.addEventListener("input", applyPhoneMask);
+    cepInput.addEventListener("input", () => {
+      cepInput.value = formatCEP(cepInput.value);
+      addressStatus.className = "address-status";
+      addressStatus.textContent = "";
+    });
+    cepInput.addEventListener("blur", lookupCepAndSuggestAddress);
     createParticles();
     applyPhoneMask();
 
@@ -735,13 +854,26 @@
       const name = document.getElementById("name").value.trim();
       const email = document.getElementById("email").value.trim();
       const phone = phoneInput.value.trim();
+      const cep = cepInput.value.trim();
       const country = phoneCountry.value;
       const docDigits = digitsOnly(documentValue);
       const type = docDigits.length === 11 ? "CPF" : docDigits.length === 14 ? "CNPJ" : "";
+      const addressStreet = addressStreetInput.value.trim();
+      const addressNumber = addressNumberInput.value.trim();
+      const addressDistrict = addressDistrictInput.value.trim();
+      const addressCity = addressCityInput.value.trim();
+      const addressState = addressStateInput.value.trim().toUpperCase();
+      const addressComplement = addressComplementInput.value.trim();
 
-      if (!documentValue || !name || !email || !phone || !country) {
+      if (!documentValue || !name || !email || !phone || !country || !cep) {
         statusMessage.classList.add("error");
         statusMessage.textContent = "Preencha todos os campos obrigatórios.";
+        return;
+      }
+
+      if (digitsOnly(cep).length !== 8) {
+        statusMessage.classList.add("error");
+        statusMessage.textContent = "CEP inválido. Informe 8 dígitos.";
         return;
       }
 
@@ -768,6 +900,15 @@
         return;
       }
 
+      if (!addressStreet || !addressDistrict || !addressCity || !addressState) {
+        const cepLookupOk = await lookupCepAndSuggestAddress();
+        if (!cepLookupOk && (!addressStreetInput.value.trim() || !addressDistrictInput.value.trim() || !addressCityInput.value.trim() || !addressStateInput.value.trim())) {
+          statusMessage.classList.add("error");
+          statusMessage.textContent = "Complete o endereço para continuar.";
+          return;
+        }
+      }
+
       submitBtn.disabled = true;
       submitBtn.textContent = "Enviando...";
 
@@ -779,6 +920,13 @@
           email,
           phoneCountry: country,
           phone,
+          cep,
+          addressStreet: addressStreetInput.value.trim(),
+          addressNumber: addressNumberInput.value.trim(),
+          addressDistrict: addressDistrictInput.value.trim(),
+          addressCity: addressCityInput.value.trim(),
+          addressState: addressStateInput.value.trim().toUpperCase(),
+          addressComplement: addressComplementInput.value.trim(),
           source: "logan-form-web",
           submittedAt: new Date().toISOString()
         };
@@ -807,7 +955,14 @@
           name,
           email,
           phoneCountry: country,
-          phone
+          phone,
+          cep,
+          addressStreet: addressStreetInput.value.trim(),
+          addressNumber: addressNumberInput.value.trim(),
+          addressDistrict: addressDistrictInput.value.trim(),
+          addressCity: addressCityInput.value.trim(),
+          addressState: addressStateInput.value.trim().toUpperCase(),
+          addressComplement: addressComplementInput.value.trim()
         });
         const redirectUrl = `${WHATSAPP_BASE_URL}${encodeURIComponent(message)}&type=phone_number&app_absent=0`;
 

@@ -9,15 +9,15 @@ services:
       - ../web/logan-technology-logomarca-.png:/usr/share/nginx/html/logan-technology-logomarca-.png:ro
     labels:
       - traefik.enable=true
-      - traefik.docker.network=n8n_default
+      - traefik.docker.network=proxy
       - traefik.http.routers.cadastro-site.rule=Host(`cadastro.bezura.com.br`)
       - traefik.http.routers.cadastro-site.entrypoints=web,websecure
       - traefik.http.routers.cadastro-site.tls=true
-      - traefik.http.routers.cadastro-site.tls.certresolver=mytlschallenge
+      - traefik.http.routers.cadastro-site.tls.certresolver=letsencrypt
       - traefik.http.routers.cadastro-site.priority=10
       - traefik.http.services.cadastro-site.loadbalancer.server.port=80
     networks:
-      - n8n_default
+      - proxy
 
   cadastro-api:
     build:
@@ -29,16 +29,16 @@ services:
       - ../api/.env
     labels:
       - traefik.enable=true
-      - traefik.docker.network=n8n_default
+      - traefik.docker.network=proxy
       - traefik.http.routers.cadastro-api.rule=Host(`cadastro.bezura.com.br`) && Path(`/lead`)
       - traefik.http.routers.cadastro-api.entrypoints=web,websecure
       - traefik.http.routers.cadastro-api.tls=true
-      - traefik.http.routers.cadastro-api.tls.certresolver=mytlschallenge
+      - traefik.http.routers.cadastro-api.tls.certresolver=letsencrypt
       - traefik.http.routers.cadastro-api.priority=100
       - traefik.http.services.cadastro-api.loadbalancer.server.port=3000
     networks:
-      - n8n_default
+      - proxy
 
 networks:
-  n8n_default:
+  proxy:
     external: true

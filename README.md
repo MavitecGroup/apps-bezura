@@ -20,7 +20,7 @@ Landing page de cadastro rápido orientada a conversão, com validações de dad
 ## 🧩 Visão geral da solução
 
 - **Objetivo:** coletar dados completos do lead para orçamento comercial.
-- **Entrada:** CPF/CNPJ, nome, e-mail, telefone, CEP e endereço.
+- **Entrada:** CPF/CNPJ, nome, e-mail, telefone, CEP (ou endereço manual se o lead marcar **Não sei o CEP**) e endereço completo quando aplicável.
 - **Saída:** payload estruturado enviado primeiro para a API segura (`POST /lead`) e depois para o webhook n8n.
 - **Resiliência:** mesmo com falha no webhook, o fluxo segue para WhatsApp para não perder conversão.
 
@@ -42,7 +42,8 @@ Landing page de cadastro rápido orientada a conversão, com validações de dad
 
 2. **Enriquecimento de dados no navegador**
    - Integração com BrasilAPI para validação de CNPJ e sugestão de contato.
-   - Integração com ViaCEP para sugestão automática de endereço.
+   - Integração com ViaCEP para sugestão automática de endereço a partir do CEP.
+   - Opção **Não sei o CEP** para abrir imediatamente o preenchimento manual de endereço.
    - Fallback para preenchimento manual quando APIs externas falham.
 
 3. **Camada segura de backend (`POST /lead`)**
@@ -62,9 +63,10 @@ Landing page de cadastro rápido orientada a conversão, com validações de dad
    - Envio final para `POST /clientes` da API Betel.
 
 6. **Deploy em VPS com Docker + Traefik**
-   - Stack com frontend e API no mesmo domínio, roteando `/lead` para backend.
-   - Segredos mantidos em `.env` no servidor (fora do frontend).
-   - Publicação contínua via atualização de arquivos + `docker compose up -d --build`.
+   - Stack com frontend (Nginx) e API no mesmo host (`cadastro.bezura.com.br`), com prioridade de rota maior para `/lead` no backend.
+   - Rede Docker externa **`proxy`** (a mesma à qual o Traefik está anexado) e certificados TLS via resolver **`letsencrypt`** nas labels do compose.
+   - Segredos apenas em `api/.env` no servidor (nunca no frontend).
+   - Publicação: `git pull` no diretório do projeto + `docker compose -f infra/docker-compose.vps.yml up -d --build`.
 
 ## 🛠️ Tecnologias utilizadas
 
@@ -100,9 +102,9 @@ Dependências de runtime externo via HTTP:
 1. Usuário preenche documento (CPF/CNPJ).
 2. Sistema aplica máscara e validação local.
 3. Para CNPJ válido, consulta BrasilAPI e sugere nome/e-mail/telefone quando disponível.
-4. Usuário informa CEP.
-5. Sistema consulta ViaCEP e sugere endereço.
-6. Formulário valida campos obrigatórios.
+4. Usuário informa CEP **ou** marca **Não sei o CEP** (campo desabilitado, endereço preenchido manualmente).
+5. Com CEP válido, o sistema consulta ViaCEP e sugere endereço; sem CEP, o envio usa o texto `Não informado` no campo `cep` e exige rua, número, bairro, cidade e UF.
+6. Formulário valida campos obrigatórios conforme o modo escolhido.
 7. Payload é enviado para `POST /lead` (API segura).
 8. API valida schema, aplica rate-limit e anexa header secreto para o n8n.
 9. API repassa payload ao webhook n8n.
@@ -113,8 +115,9 @@ Dependências de runtime externo via HTTP:
 - CPF e CNPJ com validação de dígitos verificadores.
 - Rejeição de documentos com dígitos repetidos.
 - Telefone validado por país (`BR`, `PT`, `US`, `AR`).
-- CEP com 8 dígitos e máscara `00000-000`.
-- Endereço mínimo obrigatório: rua, bairro, cidade e UF.
+- CEP com 8 dígitos e máscara `00000-000`, exceto quando **Não sei o CEP** estiver marcado (payload com `cep: "Não informado"`).
+- Com CEP normal: endereço mínimo rua, bairro, cidade e UF (com complemento ViaCEP quando possível).
+- Sem CEP (modo manual): obrigatórios rua, **número**, bairro, cidade e UF.
 - Timeout de 5s na consulta ViaCEP com fallback para preenchimento manual.
 
 ## 🔐 Boas práticas aplicadas
@@ -136,11 +139,12 @@ No frontend:
 - `WEBHOOK_URL`: endpoint interno `/lead`.
 - `WHATSAPP_BASE_URL`: número destino do atendimento.
 
-No backend (`api/.env`):
+No backend (`api/.env` — use `api/.env.example` como modelo):
 
 - `PORT`: porta interna da API (ex.: `3000`)
 - `N8N_WEBHOOK_URL`: URL do webhook de ingestão no n8n
 - `N8N_WEBHOOK_TOKEN`: segredo enviado no header `x-webhook-token`
+- `BETEL_ACCESS_TOKEN` / `BETEL_SECRET_ACCESS_TOKEN`: credenciais da API Betel para checagem de duplicidade por documento antes do webhook
 
 ## 🚀 Execução local
 
@@ -157,6 +161,36 @@ python3 -m http.server 8080
 ```
 
 Depois acesse `http://localhost:8080/web/`.
+
+## 🌐 Deploy em produção (VPS)
+
+Domínio público: **`cadastro.bezura.com.br`**.
+
+### Diretório e Git na VPS (ex.: Hetzner)
+
+O deploy de referência usa o clone em **`/opt/form-bezura`**. Atualização típica:
+
+```bash
+cd /opt/form-bezura
+git pull --ff-only
+cd infra
+docker compose -f docker-compose.vps.yml up -d --build
+```
+
+O `docker-compose.vps.yml` monta `web/index.html` e assets no container Nginx e constrói a imagem da API a partir de `api/`. É necessário existir **`api/.env`** no servidor (não versionado).
+
+### Traefik
+
+- Rede externa: **`proxy`** (o stack do cadastro precisa estar na mesma rede que o Traefik).
+- Labels usam `traefik.docker.network=proxy` e `tls.certresolver=letsencrypt` (ajuste se o seu Traefik usar outros nomes).
+
+### DNS (importante)
+
+O registro **A** (ou **CNAME**) de **`cadastro.bezura.com.br`** deve apontar para o **mesmo servidor** onde os containers `cadastro-site` e `cadastro-api` estão rodando. Se o DNS continuar apontando para outro IP (hospedagem antiga), o navegador exibirá uma versão antiga do HTML (por exemplo rodapé `v1.3.0`) mesmo com o repositório já em `v1.4.0` na VPS correta. Após alterar DNS, purgue cache se usar proxy CDN (ex.: Cloudflare).
+
+### Acesso Git via SSH na VPS
+
+Se **deploy keys** estiverem desabilitadas no repositório GitHub, use uma chave SSH dedicada na VPS e registro na conta com acesso ao org/repo, ou habilite deploy key read-only no repositório. Host alias sugerido em `~/.ssh/config`: `github.com-form-bezura` com `IdentityFile` apontando para a chave da VPS.
 
 ## 🗂️ Estrutura do repositório
 
@@ -186,10 +220,27 @@ Este projeto adota **SemVer** (`MAJOR.MINOR.PATCH`):
 
 ### 📍 Versão atual
 
-- **Formulário/API:** `v1.3.0`
-- Motivo: prevenção de duplicidade por documento antes do webhook e melhoria de resolução de `cidade_id` com fallback inteligente no n8n.
+- **Formulário/API:** `v1.4.0` (rodapé e chave de rascunho `localStorage` alinhadas).
+- Inclui opção **Não sei o CEP**, validação de `cep` no backend para CEP numérico ou texto `Não informado`, e compose Traefik alinhado à rede **`proxy`** + **`letsencrypt`**.
 
 ## 📝 Histórico de versões (detalhado)
+
+### `v1.4.0` - CEP desconhecido e deploy Traefik alinhado
+
+**Tipo de release:** `MINOR`
+
+**Principais entregas**
+- Checkbox **Não sei o CEP** ao lado do campo: desabilita CEP, exibe bloco de endereço manual e envia `cep` como `Não informado` quando marcado.
+- Validação no cliente: com modo sem CEP, obrigatórios logradouro, número, bairro, cidade e UF.
+- API (`zod`): aceita CEP com 8 dígitos (com ou sem hífen) ou o texto normalizado **não informado** (com/sem acento).
+- `infra/docker-compose.vps.yml`: rede externa **`proxy`** e `certresolver` **`letsencrypt`** (compatível com Traefik na VPS Hetzner de referência).
+- Chave de rascunho `logan-form-draft-v1.4.0` para não misturar estado com releases anteriores.
+
+**Impacto funcional**
+- Reduz abandono quando o lead não tem CEP em mãos.
+- Documentação de deploy e DNS no README evita confusão entre versão no Git e versão vista no domínio público.
+
+---
 
 ### `v1.3.0` - Anti-duplicidade e cidade_id resiliente
 
@@ -222,7 +273,7 @@ Este projeto adota **SemVer** (`MAJOR.MINOR.PATCH`):
 - Implementação de `helmet` e `express-rate-limit`.
 - Validação de payload com `zod` antes de encaminhar ao n8n.
 - Encaminhamento ao n8n com segredo em `.env` (`x-webhook-token`).
-- `infra/docker-compose.vps.yml` com roteamento Traefik para API (`/lead`) e site no mesmo domínio.
+- `infra/docker-compose.vps.yml` com roteamento Traefik para API (`/lead`) e site no mesmo domínio (evolução posterior: rede `proxy` + `letsencrypt`; ver `v1.4.0`).
 
 **Impacto de segurança**
 - Segredo removido do frontend e movido para ambiente de servidor.

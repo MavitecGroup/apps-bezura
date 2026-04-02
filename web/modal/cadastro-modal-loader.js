@@ -3,6 +3,19 @@
  * <script src="https://cadastro.bezura.com.br/modal/cadastro-modal-loader.js" defer></script>
  *
  * Opcional: data-cadastro-origin="https://cadastro.bezura.com.br"
+ *
+ * O iframe recebe a URL completa da aba via postMessage (referrer costuma vir só a origem entre subdomínios).
+ *
+ * Opcional no app pai (ex.: app.bezura.com.br), se o iframe não usar ?contextUrl= na src:
+ * window.addEventListener("message", function (e) {
+ *   if (e.origin !== "https://cadastro.bezura.com.br") return;
+ *   if (e.data && e.data.type === "cadastro-bezura-request-page-url") {
+ *     e.source && e.source.postMessage(
+ *       { type: "cadastro-bezura-context-url", url: location.href },
+ *       e.origin
+ *     );
+ *   }
+ * });
  */
 (function (w, d) {
   var script = d.currentScript;
@@ -11,7 +24,19 @@
     "https://cadastro.bezura.com.br";
   MODAL_ORIGIN = String(MODAL_ORIGIN).replace(/\/$/, "");
 
+  var MSG_TYPE = "cadastro-bezura-context-url";
+
   var holderId = "cadastro-bezura-modal-root";
+
+  function sendPageUrlToIframe(iframe) {
+    if (!iframe || !iframe.contentWindow) return;
+    try {
+      iframe.contentWindow.postMessage(
+        { type: MSG_TYPE, url: w.location.href },
+        MODAL_ORIGIN
+      );
+    } catch (_e) {}
+  }
 
   function mount() {
     if (d.getElementById(holderId)) return;
@@ -28,6 +53,16 @@
     iframe.title = "Cadastro Bezura";
     iframe.style.cssText = "width:100%;height:100%;border:0;background:#fff;";
     iframe.setAttribute("referrerpolicy", "no-referrer-when-downgrade");
+
+    iframe.addEventListener("load", function () {
+      sendPageUrlToIframe(iframe);
+      w.setTimeout(function () {
+        sendPageUrlToIframe(iframe);
+      }, 200);
+      w.setTimeout(function () {
+        sendPageUrlToIframe(iframe);
+      }, 800);
+    });
 
     holder.appendChild(iframe);
     d.body.appendChild(holder);

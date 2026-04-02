@@ -153,6 +153,92 @@ body {
   text-align: center;
 }
 
+.actions-row {
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 12px;
+}
+
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.btn-primary {
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  box-shadow: 0 8px 22px rgba(37, 99, 235, 0.28);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  margin-top: 8px;
+  color: var(--primary-dark);
+  background: #eef4ff;
+  border: 1px solid var(--line);
+}
+
+.btn-secondary:hover {
+  background: #e2ebff;
+}
+
+.actions-hint {
+  margin: 8px 0 0;
+  font-size: 0.74rem;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.4;
+  text-align: center;
+}
+
+.paste-panel {
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.paste-label {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+  margin-bottom: 6px;
+}
+
+.paste-input {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 10px 11px;
+  font-size: 0.78rem;
+  color: #0f172a;
+  outline: none;
+}
+
+.paste-input:focus {
+  border-color: #7da7ff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
 /* Janela estreita / baixa (ex.: 568x660 em iframe) */
 @media (max-width: 600px), (max-height: 720px) {
   body {

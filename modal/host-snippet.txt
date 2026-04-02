@@ -20,19 +20,10 @@ src={
 />
 A página do chat não pode usar Referrer-Policy que esconda o path (ex. strict-origin).
 
-3) Responder ao pedido do modal (postMessage)
----------------------------------------------
-window.addEventListener("message", (e) => {
-  if (e.origin !== "https://cadastro.bezura.com.br") return;
-  if (e.data?.type === "cadastro-bezura-request-page-url") {
-    e.source?.postMessage(
-      { type: "cadastro-bezura-context-url", url: location.href },
-      e.origin
-    );
-  }
-});
-
-4) Script oficial na página do chat
------------------------------------
+3) Script oficial na página do chat
+-------------------------------------
 <script src="https://cadastro.bezura.com.br/modal/cadastro-modal-loader.js" defer></script>
 (já define ?contextUrl= + postMessage após o load)
+
+O modal ainda aceita postMessage com tipo cadastro-bezura-context-url (e
+variantes) se o host quiser enviar a URL por script.

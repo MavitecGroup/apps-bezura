@@ -6,7 +6,6 @@ const SESSION_RE =
 const MSG_CONTEXT_URL = "cadastro-bezura-context-url";
 const MSG_PAGE_URL = "cadastro-bezura-page-url";
 const MSG_PARENT_URL = "cadastro-bezura-parent-url";
-const MSG_REQUEST_PAGE_URL = "cadastro-bezura-request-page-url";
 
 const URL_MSG_TYPES = new Set([
   MSG_CONTEXT_URL,
@@ -122,25 +121,6 @@ export default function App() {
     return () => window.removeEventListener("message", onMessage);
   }, []);
 
-  const requestUrlFromParent = useCallback(() => {
-    try {
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: MSG_REQUEST_PAGE_URL }, "*");
-      }
-    } catch (_e) {
-      /* cross-origin parent still receives postMessage */
-    }
-  }, []);
-
-  useEffect(() => {
-    const t1 = window.setTimeout(requestUrlFromParent, 100);
-    const t2 = window.setTimeout(requestUrlFromParent, 500);
-    return () => {
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
-    };
-  }, [requestUrlFromParent]);
-
   const sessionId = useMemo(() => extractSessionId(contextUrl), [contextUrl]);
 
   const registrationUrl = useMemo(() => {
@@ -182,44 +162,31 @@ export default function App() {
       </header>
       <main className="app-main">
         {!registrationUrl ? (
-          <>
-            <div className="actions-row">
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={requestUrlFromParent}
-              >
-                Gerar link do formulário
-              </button>
-              <p className="actions-hint">
-                Tenta obter a URL automaticamente. Se não aparecer o link,
-                cole a URL do chat abaixo — ou peça ao time do Bezura para
-                passar a URL na <code>src</code> do iframe (veja{" "}
-                <code>modal/host-snippet.txt</code> no projeto).
-              </p>
-            </div>
-            <div className="paste-panel">
-              <label className="paste-label" htmlFor="paste-url">
-                URL da barra de endereços (aba do chat)
-              </label>
-              <input
-                id="paste-url"
-                className="paste-input"
-                type="url"
-                inputMode="url"
-                autoComplete="off"
-                placeholder="https://app.bezura.com.br/chat2/sessions/..."
-                value={pasteValue}
-                onChange={(e) => setPasteValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") applyPaste();
-                }}
-              />
-              <button type="button" className="btn-secondary" onClick={applyPaste}>
-                Aplicar URL
-              </button>
-            </div>
-          </>
+          <div className="paste-panel">
+            <label className="paste-label" htmlFor="paste-url">
+              Cole a URL da barra de endereços (aba do chat)
+            </label>
+            <input
+              id="paste-url"
+              className="paste-input"
+              type="url"
+              inputMode="url"
+              autoComplete="off"
+              placeholder="https://app.bezura.com.br/chat2/sessions/..."
+              value={pasteValue}
+              onChange={(e) => setPasteValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") applyPaste();
+              }}
+            />
+            <button type="button" className="btn-primary" onClick={applyPaste}>
+              Aplicar URL
+            </button>
+            <p className="paste-hint">
+              Integração automática: passe <code>contextUrl</code> na{" "}
+              <code>src</code> do iframe — ver <code>modal/host-snippet.txt</code>.
+            </p>
+          </div>
         ) : null}
 
         <div
@@ -245,7 +212,7 @@ export default function App() {
             </div>
           ) : (
             <p className="bubble-hint">
-              Use o botão acima ou cole a URL do chat. O ID vem do trecho{" "}
+              Cole a URL do chat no campo acima. O ID vem do trecho{" "}
               <code>/sessions/</code> na URL.
             </p>
           )}

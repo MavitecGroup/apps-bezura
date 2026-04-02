@@ -6,17 +6,6 @@
  *
  * O iframe recebe a URL via ?contextUrl= na src e por postMessage após o load.
  * referrerPolicy unsafe-url ajuda document.referrer a trazer path completo (quando o browser permitir).
- *
- * Opcional no app pai (ex.: app.bezura.com.br), se o iframe não usar ?contextUrl= na src:
- * window.addEventListener("message", function (e) {
- *   if (e.origin !== "https://cadastro.bezura.com.br") return;
- *   if (e.data && e.data.type === "cadastro-bezura-request-page-url") {
- *     e.source && e.source.postMessage(
- *       { type: "cadastro-bezura-context-url", url: location.href },
- *       e.origin
- *     );
- *   }
- * });
  */
 (function (w, d) {
   var script = d.currentScript;

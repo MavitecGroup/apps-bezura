@@ -217,18 +217,12 @@ body {
   text-align: center;
 }
 
-.actions-row {
-  width: 100%;
-  max-width: 100%;
-  margin-bottom: 12px;
-}
-
-.btn-primary,
-.btn-secondary {
+.btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 100%;
+  margin-top: 8px;
   border: 0;
   border-radius: 12px;
   padding: 11px 14px;
@@ -237,9 +231,6 @@ body {
   font-family: inherit;
   cursor: pointer;
   transition: filter 0.15s ease, transform 0.15s ease;
-}
-
-.btn-primary {
   color: #fff;
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   box-shadow: 0 8px 22px rgba(37, 99, 235, 0.28);
@@ -248,32 +239,6 @@ body {
 .btn-primary:hover {
   filter: brightness(1.05);
   transform: translateY(-1px);
-}
-
-.btn-secondary {
-  margin-top: 8px;
-  color: var(--primary-dark);
-  background: #eef4ff;
-  border: 1px solid var(--line);
-}
-
-.btn-secondary:hover {
-  background: #e2ebff;
-}
-
-.actions-hint {
-  margin: 8px 0 0;
-  font-size: 0.74rem;
-  color: rgba(255, 255, 255, 0.88);
-  line-height: 1.4;
-  text-align: center;
-}
-
-.actions-hint code {
-  font-size: 0.68rem;
-  padding: 0 3px;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.2);
 }
 
 .paste-panel {
@@ -308,6 +273,20 @@ body {
 .paste-input:focus {
   border-color: #7da7ff;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.paste-hint {
+  margin: 10px 0 0;
+  font-size: 0.68rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.paste-hint code {
+  font-size: 0.62rem;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.18);
 }
 
 /* Janela estreita / baixa (ex.: 568x660 em iframe) */

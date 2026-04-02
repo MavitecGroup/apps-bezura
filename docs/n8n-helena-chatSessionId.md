@@ -114,6 +114,110 @@ Os nós seguintes passam a usar sempre `$json.chatSessionId`.
 
 ---
 
+## 6. Nó HTTP (ex.: workflow `kzjREuvKXHbvuWjg` / nó profundo `.../19fdec`)
+
+Edite o **HTTP Request** que chama a Helena assim (ajuste o **nome do nó Webhook** se for diferente de `Webhook`):
+
+### URL
+
+Ative **Expression** no campo URL e use **uma** das opções:
+
+```text
+https://api.helena.run/chat/v1/session/{{ $json.chatSessionId }}/message
+```
+
+Se o item atual for só a resposta do Betel e **não** trouxer `chatSessionId`:
+
+```text
+https://api.helena.run/chat/v1/session/{{ $('Webhook').item.json.chatSessionId || $('Webhook').item.json.body.chatSessionId }}/message
+```
+
+(Troque `Webhook` pelo nome exato do seu nó de entrada, como aparece no canvas.)
+
+### Autenticação
+
+- **Generic Credential Type** → Header Auth, ou
+- **Send Headers**: `Authorization` = `Bearer SEU_TOKEN_HELENA`  
+  (ideal: credencial / variável de ambiente; [doc](https://helena.readme.io/reference/getting-started-with-your-api))
+
+### Corpo JSON com **resumo do cadastro**
+
+No body, use **JSON** e marque o campo de texto como expressão (no n8n costuma ser `Text` com `=` ou modo Expression).
+
+**Opção A — um único campo `text` com template (se a Helena aceitar `{ "text": "..." }`):**
+
+Chave `text` com valor (expression):
+
+```javascript
+={{ [
+  '✅ *Cadastro recebido*',
+  '',
+  '👤 ' + ($json.name || ''),
+  '📧 ' + ($json.email || ''),
+  '📱 ' + ($json.phoneCountry || '') + ' ' + ($json.phone || ''),
+  '🧾 ' + ($json.documentType || '') + ' ' + ($json.document || ''),
+  '📮 ' + ($json.cep || ''),
+  '📍 ' + ($json.addressStreet || '') + ', ' + ($json.addressNumber || '') + ' — ' + ($json.addressDistrict || ''),
+  '🏙️ ' + ($json.addressCity || '') + '/' + ($json.addressState || ''),
+  '➕ ' + ($json.addressComplement || '-')
+].join('\n') }}
+```
+
+Se os dados do endereço estiverem só no Webhook e o item atual for outro, prefixe campos, por exemplo: `$('Webhook').item.json.name` em vez de `$json.name`.
+
+**Opção B — nó Code antes do HTTP (mais fácil de depurar)**
+
+1. Adicione um nó **Code** (Run Once for All Items ou per item) **entre** o último nó do cadastro e o HTTP Request.
+2. Cole a lógica abaixo (ajuste `WEBHOOK_NODE` para o nome real do nó Webhook):
+
+```javascript
+// Troque "Webhook" pelo nome do seu nó de webhook no canvas.
+const item = $input.first().json;
+const wh = $("Webhook").first().json;
+const src = { ...wh, ...item };
+const sid =
+  src.chatSessionId ||
+  (wh.body && wh.body.chatSessionId) ||
+  "";
+const text = [
+  "✅ Cadastro recebido",
+  "",
+  "👤 " + (src.name || ""),
+  "📧 " + (src.email || ""),
+  "📱 " + (src.phoneCountry || "") + " " + (src.phone || ""),
+  "🧾 " + (src.documentType || "") + " " + (src.document || ""),
+  "📮 " + (src.cep || ""),
+  "📍 " +
+    (src.addressStreet || "") +
+    ", " +
+    (src.addressNumber || "") +
+    " — " +
+    (src.addressDistrict || ""),
+  "🏙️ " + (src.addressCity || "") + "/" + (src.addressState || ""),
+  "➕ " + (src.addressComplement || "-")
+].join("\n");
+
+return [{ json: { ...src, chatSessionId: sid, helenaMessage: text } }];
+```
+
+3. No **HTTP Request**, URL:
+
+   `https://api.helena.run/chat/v1/session/{{ $json.chatSessionId }}/message`
+
+4. Body JSON (ajuste chaves se a sua API usar outro contrato):
+
+```json
+{
+  "text": "={{ $json.helenaMessage }}"
+}
+```
+
+Se o **Try it** da Helena usar outro formato (ex.: `content`, `type`), mantenha esse formato e coloque só o resumo no campo de texto correspondente.
+
+---
+
 ## Workflow no n8n
 
-O link `https://n8n.bezura.cloud/workflow/kzjREuvKXHbvuWjg` só pode ser editado dentro do n8n; este arquivo descreve exatamente o que configurar lá. Depois de alterar, execute um teste com payload contendo `chatSessionId` e outro sem, para validar o IF e o POST Helena.
+O fluxo [`kzjREuvKXHbvuWjg`](https://n8n.bezura.cloud/workflow/kzjREuvKXHbvuWjg) e o nó em [`.../19fdec`](https://n8n.bezura.cloud/workflow/kzjREuvKXHbvuWjg/19fdec) só podem ser salvos dentro do n8n; use a **seção 6** acima como checklist no editor.
+
+Depois de alterar, rode um teste **com** `chatSessionId` no payload e outro **sem**, para validar o IF (se houver) e o POST Helena.

@@ -647,6 +647,37 @@
     const CEP_UNKNOWN_SENTINEL = "Não informado";
     let documentValidated = false;
 
+    const UUID_SESSION_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    function extractChatSessionIdFromCadastroPage() {
+      const raw = window.location.search.replace(/^\?/, "");
+      if (UUID_SESSION_RE.test(raw)) return raw;
+      const sp = new URLSearchParams(window.location.search);
+      for (const key of ["session", "sessionId", "chatSessionId"]) {
+        const v = sp.get(key);
+        if (v && UUID_SESSION_RE.test(v)) return v;
+      }
+      for (const [k, v] of sp) {
+        if (!v && UUID_SESSION_RE.test(k)) return k;
+      }
+      return "";
+    }
+
+    function getChatSessionIdForForm() {
+      const fromUrl = extractChatSessionIdFromCadastroPage();
+      if (fromUrl) {
+        try {
+          sessionStorage.setItem("cadastroChatSessionId", fromUrl);
+        } catch (_e) {}
+        return fromUrl;
+      }
+      try {
+        return sessionStorage.getItem("cadastroChatSessionId") || "";
+      } catch (_e) {
+        return "";
+      }
+    }
+
     /* [SECAO 20] HELPERS GERAIS */
     function digitsOnly(value) {
       return value.replace(/\D/g, "");
@@ -1351,6 +1382,11 @@
           source: "logan-form-web",
           submittedAt: new Date().toISOString()
         };
+
+        const chatSessionId = getChatSessionIdForForm();
+        if (chatSessionId) {
+          payload.chatSessionId = chatSessionId;
+        }
 
         // Etapa critica:
         // 1) API /lead valida payload

@@ -1,0 +1,41 @@
+/**
+ * Incorpore no sistema host (ex.: app.bezura.com.br):
+ * <script src="https://cadastro.bezura.com.br/modal/cadastro-modal-loader.js" defer></script>
+ *
+ * Opcional: data-cadastro-origin="https://cadastro.bezura.com.br"
+ */
+(function (w, d) {
+  var script = d.currentScript;
+  var MODAL_ORIGIN =
+    (script && script.getAttribute("data-cadastro-origin")) ||
+    "https://cadastro.bezura.com.br";
+  MODAL_ORIGIN = String(MODAL_ORIGIN).replace(/\/$/, "");
+
+  var holderId = "cadastro-bezura-modal-root";
+
+  function mount() {
+    if (d.getElementById(holderId)) return;
+
+    var holder = d.createElement("div");
+    holder.id = holderId;
+    holder.setAttribute("aria-label", "Cadastro Bezura");
+    holder.style.cssText =
+      "position:fixed;bottom:16px;right:16px;z-index:2147483646;width:min(420px,calc(100vw - 32px));height:min(560px,calc(100vh - 32px));border:none;border-radius:16px;overflow:hidden;box-shadow:0 18px 40px rgba(27,63,138,0.28);";
+
+    var iframe = d.createElement("iframe");
+    var contextUrl = encodeURIComponent(w.location.href);
+    iframe.src = MODAL_ORIGIN + "/modal/?contextUrl=" + contextUrl;
+    iframe.title = "Cadastro Bezura";
+    iframe.style.cssText = "width:100%;height:100%;border:0;background:#fff;";
+    iframe.setAttribute("referrerpolicy", "no-referrer-when-downgrade");
+
+    holder.appendChild(iframe);
+    d.body.appendChild(holder);
+  }
+
+  if (d.readyState === "loading") {
+    d.addEventListener("DOMContentLoaded", mount);
+  } else {
+    mount();
+  }
+})(window, document);

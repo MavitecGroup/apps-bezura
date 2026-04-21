@@ -64,7 +64,8 @@ const leadSchema = z.object({
   addressComplement: z.string().trim().max(120).optional().default(""),
   source: z.string().trim().max(80).optional().default("logan-form-web"),
   submittedAt: z.iso.datetime().optional(),
-  chatSessionId: z.string().uuid().optional()
+  chatSessionId: z.string().uuid().optional(),
+  sourceUrl: z.string().url().max(512).optional()
 });
 
 function normalizeDocument(value) {

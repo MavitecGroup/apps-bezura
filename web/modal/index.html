@@ -260,10 +260,19 @@
     .ddi-select { width: 96px; cursor: pointer; flex: 0 0 96px; }
     #rem-dest { flex: 1; min-width: 210px; }
 
-    .datetime-row { display: flex; gap: 8px; }
-    .datetime-row input { flex: 1; }
+    .datetime-row {
+      display: grid;
+      grid-template-columns: minmax(150px, 1fr) minmax(130px, 0.85fr);
+      gap: 8px;
+      align-items: center;
+    }
+    .datetime-row input { width: 100%; min-width: 0; }
 
-    .freq-options { margin-top: 12px; padding: 16px; background: rgba(0,0,0,0.15); border-radius: 12px; display: none; }
+    .freq-options { margin-top: 12px; padding: 16px; background: rgba(0,0,0,0.15); border-radius: 12px; display: block; }
+    .freq-block { display: none; }
+    .freq-block.active { display: block; }
+    .freq-block .input-group { margin-top: 10px; }
+    .freq-helper { font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; }
 
     .days-selector { display: flex; gap: 6px; margin-top: 10px; }
     .day-btn {
@@ -453,13 +462,6 @@
               <input type="text" id="rem-dest" placeholder="Ex: 11999999999">
             </div>
           </div>
-          <div class="input-group">
-            <label>Data e Hora</label>
-            <div class="datetime-row">
-              <input type="date" id="rem-date">
-              <input type="time" id="rem-time">
-            </div>
-          </div>
         </div>
 
         <div class="input-group">
@@ -474,7 +476,26 @@
 
         <!-- CAMPOS DINÂMICOS DE RECORRÊNCIA -->
         <div id="freq-options" class="freq-options">
-          <div id="opt-weekly" style="display:none;">
+          <div id="opt-once" class="freq-block">
+            <div class="form-row">
+              <div class="input-group">
+                <label>Data do envio</label>
+                <input type="date" id="rem-date-once">
+              </div>
+              <div class="input-group">
+                <label>Hora do envio</label>
+                <input type="time" id="rem-time-once">
+              </div>
+            </div>
+          </div>
+          <div id="opt-daily" class="freq-block">
+            <div class="input-group">
+              <label>Hora do envio diário</label>
+              <input type="time" id="rem-time-daily">
+              <div class="freq-helper">O sistema agenda automaticamente para hoje ou amanhã, conforme o horário atual.</div>
+            </div>
+          </div>
+          <div id="opt-weekly" class="freq-block">
             <label>Dias da Semana</label>
             <div class="days-selector">
               <button class="day-btn" data-day="1">S</button>
@@ -485,8 +506,12 @@
               <button class="day-btn" data-day="6">S</button>
               <button class="day-btn" data-day="0">D</button>
             </div>
+            <div class="input-group">
+              <label>Hora do envio semanal</label>
+              <input type="time" id="rem-time-weekly">
+            </div>
           </div>
-          <div id="opt-monthly" style="display:none;">
+          <div id="opt-monthly" class="freq-block">
             <div class="form-row">
               <div class="input-group">
                 <label>Intervalo (Meses)</label>
@@ -496,6 +521,10 @@
                 <label>Dia do Mês</label>
                 <input type="number" id="rem-month-day" placeholder="Ex: 10" min="1" max="31">
               </div>
+            </div>
+            <div class="input-group">
+              <label>Hora do envio mensal</label>
+              <input type="time" id="rem-time-monthly">
             </div>
           </div>
         </div>
@@ -757,13 +786,88 @@
       return `${clean}|||RID:${rid}`;
     }
 
+    function toDateInputValue(dateObj) {
+      return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}-${String(dateObj.getDate()).padStart(2, "0")}`;
+    }
+
+    function normalizeReminderName(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function computeNextScheduleFromForm(freq) {
+      const now = new Date();
+
+      if (freq === "once") {
+        const date = document.getElementById("rem-date-once").value;
+        const time = document.getElementById("rem-time-once").value;
+        if (!date || !time) return null;
+        return { data: date, hora: time };
+      }
+
+      if (freq === "daily") {
+        const time = document.getElementById("rem-time-daily").value;
+        if (!time) return null;
+        const [h, m] = time.split(":").map(Number);
+        const candidate = new Date(now);
+        candidate.setHours(h || 0, m || 0, 0, 0);
+        if (candidate <= now) candidate.setDate(candidate.getDate() + 1);
+        return { data: toDateInputValue(candidate), hora: time };
+      }
+
+      if (freq === "weekly") {
+        const time = document.getElementById("rem-time-weekly").value;
+        const days = Array.from(document.querySelectorAll(".day-btn.active")).map((b) => Number(b.dataset.day));
+        if (!time || !days.length) return null;
+        const uniqueDays = [...new Set(days)];
+        const [h, m] = time.split(":").map(Number);
+        for (let i = 0; i <= 7; i++) {
+          const candidate = new Date(now);
+          candidate.setDate(candidate.getDate() + i);
+          if (!uniqueDays.includes(candidate.getDay())) continue;
+          candidate.setHours(h || 0, m || 0, 0, 0);
+          if (candidate > now) {
+            return { data: toDateInputValue(candidate), hora: time };
+          }
+        }
+        const fallback = new Date(now);
+        fallback.setDate(fallback.getDate() + 7);
+        fallback.setHours(h || 0, m || 0, 0, 0);
+        return { data: toDateInputValue(fallback), hora: time };
+      }
+
+      if (freq === "monthly") {
+        const interval = Math.max(1, Number.parseInt(document.getElementById("rem-month-interval").value || "1", 10) || 1);
+        const day = Math.max(1, Math.min(31, Number.parseInt(document.getElementById("rem-month-day").value || `${now.getDate()}`, 10) || now.getDate()));
+        const time = document.getElementById("rem-time-monthly").value;
+        if (!time) return null;
+        const [h, m] = time.split(":").map(Number);
+
+        const candidate = new Date(now.getFullYear(), now.getMonth(), 1, h || 0, m || 0, 0, 0);
+        const maxDay = new Date(candidate.getFullYear(), candidate.getMonth() + 1, 0).getDate();
+        candidate.setDate(Math.min(day, maxDay));
+
+        if (candidate <= now) {
+          candidate.setMonth(candidate.getMonth() + interval);
+          const maxDayNext = new Date(candidate.getFullYear(), candidate.getMonth() + 1, 0).getDate();
+          candidate.setDate(Math.min(day, maxDayNext));
+        }
+
+        return { data: toDateInputValue(candidate), hora: time };
+      }
+
+      return null;
+    }
+
     function resetReminderForm() {
       editingReminderId = null;
       document.getElementById('btn-save-rem').dataset.editCreatedAt = "";
       document.getElementById('rem-name').value = "";
       document.getElementById('rem-dest').value = "";
-      document.getElementById('rem-date').value = "";
-      document.getElementById('rem-time').value = "";
+      document.getElementById('rem-date-once').value = "";
+      document.getElementById('rem-time-once').value = "";
+      document.getElementById('rem-time-daily').value = "";
+      document.getElementById('rem-time-weekly').value = "";
+      document.getElementById('rem-time-monthly').value = "";
       document.getElementById('rem-freq').value = "once";
       document.getElementById('rem-msg').value = "";
       document.getElementById('rem-month-interval').value = "1";
@@ -784,9 +888,12 @@
       document.getElementById('rem-origin').value = decodedOrigin.number || "";
       document.getElementById('rem-country').value = normalizeDigits(reminder.ddi || "55") || "55";
       document.getElementById('rem-dest').value = normalizeDigits(reminder.destino || "");
-      document.getElementById('rem-date').value = reminder.data || "";
-      document.getElementById('rem-time').value = reminder.hora || "";
       document.getElementById('rem-freq').value = reminder.recorrencia || "once";
+      document.getElementById('rem-date-once').value = reminder.data || "";
+      document.getElementById('rem-time-once').value = reminder.hora || "";
+      document.getElementById('rem-time-daily').value = reminder.hora || "";
+      document.getElementById('rem-time-weekly').value = reminder.hora || "";
+      document.getElementById('rem-time-monthly').value = reminder.hora || "";
       document.getElementById('rem-msg').value = stripReminderRid(reminder.mensagem || "");
       document.getElementById('rem-month-interval').value = reminder.intervalo_mes || "1";
       document.getElementById('rem-month-day').value = reminder.dia_mes || "";
@@ -872,14 +979,9 @@
 
     function toggleRecurrenceFields() {
       const freq = document.getElementById('rem-freq').value;
-      const optionsBox = document.getElementById('freq-options');
-      const weekly = document.getElementById('opt-weekly');
-      const monthly = document.getElementById('opt-monthly');
-      const showExtras = freq === 'weekly' || freq === 'monthly';
-
-      optionsBox.style.display = showExtras ? 'block' : 'none';
-      weekly.style.display = freq === 'weekly' ? 'block' : 'none';
-      monthly.style.display = freq === 'monthly' ? 'block' : 'none';
+      document.querySelectorAll(".freq-block").forEach((el) => el.classList.remove("active"));
+      const target = document.getElementById(`opt-${freq}`);
+      if (target) target.classList.add("active");
     }
 
     function openDashboard(clientId, token) {
@@ -1024,6 +1126,7 @@
     async function scheduleReminder() {
       const btn = document.getElementById('btn-save-rem');
       const clientId = document.getElementById('header-id').textContent;
+      const freq = document.getElementById('rem-freq').value;
       const selectedMeta = getSelectedOriginMeta();
       const selectedTemplateId = document.getElementById('rem-template').value || "";
       const selectedTemplate = currentTemplates.find(t => t.id === selectedTemplateId);
@@ -1037,19 +1140,39 @@
         alert("⚠️ Selecione um modelo de mensagem para API oficial.");
         return;
       }
+
+      const reminderName = document.getElementById('rem-name').value.trim();
+      if (!reminderName) {
+        alert("⚠️ Informe o nome do lembrete.");
+        return;
+      }
+      const duplicate = currentReminders.find((r) =>
+        normalizeReminderName(r.nome) === normalizeReminderName(reminderName) &&
+        Number(r.id) !== Number(editingReminderId)
+      );
+      if (duplicate) {
+        alert("⚠️ Já existe um lembrete com esse nome. Escolha outro nome.");
+        return;
+      }
+
+      const nextSchedule = computeNextScheduleFromForm(freq);
+      if (!nextSchedule) {
+        alert("⚠️ Preencha corretamente os campos de recorrência para definir data e hora do próximo envio.");
+        return;
+      }
       
       const data = {
         action: editingReminderId ? 'update_reminder' : 'create_reminder',
         id: editingReminderId ? Number(editingReminderId) : undefined,
         createdAt: editingReminderId ? (document.getElementById('btn-save-rem').dataset.editCreatedAt || "") : undefined,
         id_cliente: clientId,
-        nome: document.getElementById('rem-name').value,
+        nome: reminderName,
         origem: encodeOriginForStorage(document.getElementById('rem-origin').value, selectedMeta.apiType),
         ddi: document.getElementById('rem-country').value,
         destino: document.getElementById('rem-dest').value,
-        data: document.getElementById('rem-date').value,
-        hora: document.getElementById('rem-time').value,
-        recorrencia: document.getElementById('rem-freq').value,
+        data: nextSchedule.data,
+        hora: nextSchedule.hora,
+        recorrencia: freq,
         mensagem: finalMessage,
         dias_semana: Array.from(document.querySelectorAll('.day-btn.active')).map(b => b.dataset.day),
         intervalo_mes: document.getElementById('rem-month-interval').value,

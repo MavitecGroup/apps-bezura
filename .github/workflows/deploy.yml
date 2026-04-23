@@ -21,10 +21,30 @@ jobs:
           script_stop: true
           script: |
             set -euo pipefail
-            cd /home/vinicius/avisos-bezura
+            REPO="${{ secrets.DEPLOY_REPO_PATH }}"
+            if [ -z "$REPO" ]; then REPO=/home/vinicius/avisos-bezura; fi
+            if [ ! -d "$REPO/.git" ]; then
+              echo "::error::Repositório não encontrado em $REPO — clone o repo ou defina o secret DEPLOY_REPO_PATH."
+              exit 1
+            fi
+            cd "$REPO"
             git stash push -u -m "auto-deploy-stash-$(date +%Y%m%d-%H%M%S)" || true
             git fetch origin main
             git checkout main
             git pull --ff-only origin main
             git rev-parse --short HEAD
             docker compose -f infra/docker-compose.vps.yml up -d --build
+
+      - name: Validar produção (GET / = 200; assets ok)
+        env:
+          PUBLIC_ORIGIN: https://apps.logzap.com.br
+        run: |
+          set -euo pipefail
+          dns_ip=$(getent ahosts apps.logzap.com.br | awk '/STREAM/{print $1; exit}')
+          echo "DNS apps.logzap.com.br → ${dns_ip:-?(sem getent)}"
+          echo "GitHub secret SSH_HOST deve ser o mesmo IP que o DNS (senão cada push não atualiza o site público)."
+          code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 25 "$PUBLIC_ORIGIN/")
+          echo "GET / → HTTP $code (esperado 200 com nginx atual)"
+          test "$code" = "200"
+          curl -sfS -o /dev/null --max-time 25 "$PUBLIC_ORIGIN/avisos-recorrente.png"
+          curl -sfS -o /dev/null --max-time 25 "$PUBLIC_ORIGIN/modal/"

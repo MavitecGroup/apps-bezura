@@ -77,10 +77,11 @@ Arquivo principal: `infra/docker-compose.vps.yml`
 Workflow GitHub Actions: `.github/workflows/deploy.yml`
 
 - Trigger: push em `main`
-- Ação:
-  - SSH na VPS
-  - `git pull origin main`
-  - `docker compose -f infra/docker-compose.vps.yml up -d --build`
+- Secrets do repositório: `SSH_HOST`, `SSH_USER`, `SSH_PASSWORD`; opcional `DEPLOY_REPO_PATH` (caminho absoluto do clone na VPS se não for `/home/vinicius/avisos-bezura`).
+- Após o SSH: `git pull` no clone e `docker compose -f infra/docker-compose.vps.yml up -d --build`.
+- O job valida `GET https://apps.logzap.com.br/` = **200** (painel na raiz, sem redirect antigo para `/modal/`).
+
+**Alinhamento DNS × deploy (causa típica de “não atualiza” e 404/302):** o registro **A** de `apps.logzap.com.br` deve apontar para o **mesmo servidor** configurado em `SSH_HOST`. Se o DNS apontar para outro IP, cada push atualiza uma máquina diferente da que atende o domínio — o site público permanece com Nginx antigo.
 
 ## Regras Críticas de Disparo
 

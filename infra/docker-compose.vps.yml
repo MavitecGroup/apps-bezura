@@ -5,9 +5,7 @@ services:
     restart: unless-stopped
     volumes:
       - ../infra/nginx/cadastro-site.conf:/etc/nginx/conf.d/default.conf:ro
-      - ../web/modal/index.html:/usr/share/nginx/html/index.html:ro
-      - ../web/logan-logo.png:/usr/share/nginx/html/logan-logo.png:ro
-      - ../web/logan-technology-logomarca-.png:/usr/share/nginx/html/logan-technology-logomarca-.png:ro
+      - ../web/avisos-recorrente.png:/usr/share/nginx/html/avisos-recorrente.png:ro
       - ../web/modal:/usr/share/nginx/html/modal:ro
     labels:
       - traefik.enable=true

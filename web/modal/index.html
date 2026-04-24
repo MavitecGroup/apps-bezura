@@ -224,6 +224,19 @@
     input:focus, select:focus { border-color: var(--primary); background: rgba(0, 0, 0, 0.3); box-shadow: 0 0 15px rgba(99, 102, 241, 0.2); }
 
     input:disabled, select:disabled { opacity: 0.6; cursor: not-allowed; background: rgba(255, 255, 255, 0.05); }
+    .input-error {
+      border-color: #f87171 !important;
+      box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.22) !important;
+      background: rgba(127, 29, 29, 0.22) !important;
+    }
+    .field-error {
+      min-height: 16px;
+      margin-top: 2px;
+      padding-left: 4px;
+      color: #fecaca;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
 
     /* Placeholders com contraste maior no tema azul. */
     input::placeholder,
@@ -308,6 +321,7 @@
       width: 100%;
       max-width: 1500px;
       margin: 0 auto;
+      align-items: start;
     }
 
     .form-card-wide, .table-card {
@@ -397,7 +411,19 @@
       padding: 10px 12px;
       font-size: 0.88rem;
     }
-    .table-wrapper { overflow-x: auto; }
+    #view-reminders { overflow: hidden; }
+    .table-card {
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 190px);
+      overflow: hidden;
+    }
+    .table-wrapper {
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: calc(100vh - 320px);
+      padding-right: 4px;
+    }
     table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
     th { text-align: left; padding: 12px; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--glass-border); }
     td { padding: 14px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
@@ -540,6 +566,7 @@
           <div class="input-group">
             <label>Nome do Lembrete</label>
             <input type="text" id="rem-name" placeholder="Ex: Aviso de Cobrança">
+            <div id="rem-name-error" class="field-error"></div>
           </div>
           <div class="input-group">
             <label>Sua Conta (Origem)</label>
@@ -891,6 +918,22 @@
       return String(value || "").trim().toLowerCase();
     }
 
+    function setReminderNameError(message) {
+      const input = document.getElementById('rem-name');
+      const error = document.getElementById('rem-name-error');
+      if (!input || !error) return;
+      input.classList.add('input-error');
+      error.textContent = message || "";
+    }
+
+    function clearReminderNameError() {
+      const input = document.getElementById('rem-name');
+      const error = document.getElementById('rem-name-error');
+      if (!input || !error) return;
+      input.classList.remove('input-error');
+      error.textContent = "";
+    }
+
     function computeNextScheduleFromForm(freq) {
       const now = new Date();
 
@@ -973,6 +1016,7 @@
       document.getElementById('group-template').style.display = "none";
       currentTemplates = [];
       document.querySelectorAll('.day-btn').forEach(btn => btn.classList.remove('active'));
+      clearReminderNameError();
       toggleRecurrenceFields();
       document.getElementById('btn-save-rem').innerHTML = "Agendar Lembrete";
     }
@@ -1241,8 +1285,10 @@
       }
 
       const reminderName = document.getElementById('rem-name').value.trim();
+      clearReminderNameError();
       if (!reminderName) {
-        alert("⚠️ Informe o nome do lembrete.");
+        setReminderNameError("Informe o nome do lembrete.");
+        document.getElementById('rem-name').focus();
         return;
       }
 
@@ -1255,7 +1301,8 @@
         Number(r.id) !== Number(editingReminderId)
       );
       if (duplicate) {
-        alert("⚠️ Já existe um lembrete com esse nome. Escolha outro nome.");
+        setReminderNameError("Já existe um lembrete com esse nome. Escolha outro nome.");
+        document.getElementById('rem-name').focus();
         return;
       }
 
@@ -1407,6 +1454,7 @@
         checkExistingToken(clientId);
         btn.onclick = () => saveToken(clientId, tokenInput.value);
         document.getElementById('btn-save-rem').onclick = scheduleReminder;
+        document.getElementById('rem-name').oninput = clearReminderNameError;
         document.getElementById('rem-template').onchange = onTemplateChange;
         document.getElementById('reminders-list').onclick = onReminderActionsClick;
       } else {

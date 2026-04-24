@@ -1,7 +1,7 @@
 Coloque aqui as imagens do carrossel da Loja Bezura.
 
 Nomes suportados automaticamente (ordem de deteccao):
-- `1.png`, `2.png` (e pode adicionar mais numeros se estender a lista no `index.html`)
+- `2.png` (para incluir `1.png` outra vez, adicione o ficheiro e a entrada em `STORE_BANNER_CANDIDATES` no `index.html`)
 - `banner-1.jpg` ou `banner-1.png`
 - `banner-2.jpg` ou `banner-2.png`
 - `banner-3.jpg` ou `banner-3.png`

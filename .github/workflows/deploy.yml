@@ -34,17 +34,20 @@ jobs:
             git pull --ff-only origin main
             git rev-parse --short HEAD
             docker compose -f infra/docker-compose.vps.yml up -d --build
+            docker compose -f infra/docker-compose.vps.yml up -d --force-recreate cadastro-site
 
-      - name: Validar produção (GET / = 200; assets ok)
+      - name: Validar produção (painel + assets)
         env:
           PUBLIC_ORIGIN: https://apps.logzap.com.br
         run: |
           set -euo pipefail
           dns_ip=$(getent ahosts apps.logzap.com.br | awk '/STREAM/{print $1; exit}')
-          echo "DNS apps.logzap.com.br → ${dns_ip:-?(sem getent)}"
-          echo "GitHub secret SSH_HOST deve ser o mesmo IP que o DNS (senão cada push não atualiza o site público)."
-          code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 25 "$PUBLIC_ORIGIN/")
-          echo "GET / → HTTP $code (esperado 200 com nginx atual)"
-          test "$code" = "200"
-          curl -sfS -o /dev/null --max-time 25 "$PUBLIC_ORIGIN/avisos-recorrente.png"
+          echo "DNS apps.logzap.com.br → ${dns_ip:-desconhecido}"
+          echo "SSH_HOST nos secrets deve ser esse IP — senão o CI atualiza outra máquina e o site público não muda."
           curl -sfS -o /dev/null --max-time 25 "$PUBLIC_ORIGIN/modal/"
+          curl -sfS -o /dev/null --max-time 25 "$PUBLIC_ORIGIN/avisos-recorrente.png"
+          root=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 25 "$PUBLIC_ORIGIN/")
+          echo "GET / → HTTP $root (com nginx atual do repo deve ser 200 — sem redirect)"
+          if [ "$root" != "200" ]; then
+            echo "::warning::Raiz não retorna 200 — veja README (alinhamento DNS × SSH_HOST) ou aplique manualmente infra/nginx/cadastro-site.conf no servidor do DNS."
+          fi

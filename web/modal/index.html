@@ -103,13 +103,12 @@
       overflow: hidden;
       border: 1px solid rgba(255, 255, 255, 0.2);
       background: rgba(15, 23, 42, 0.22);
-      min-height: 190px;
       position: relative;
     }
+    /* Altura fluida: cover + altura fixa cortava texto/arte nas bordas */
     .store-banner img {
       width: 100%;
-      height: 190px;
-      object-fit: cover;
+      height: auto;
       display: block;
       transition: opacity 0.4s ease;
       opacity: 1;

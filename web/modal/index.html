@@ -225,6 +225,13 @@
 
     input:disabled, select:disabled { opacity: 0.6; cursor: not-allowed; background: rgba(255, 255, 255, 0.05); }
 
+    /* Placeholders com contraste maior no tema azul. */
+    input::placeholder,
+    textarea::placeholder {
+      color: #e2e8f0;
+      opacity: 0.95;
+    }
+
     /* Dropdowns no mesmo padrão visual do painel (maior contraste). */
     select option {
       background: #17396f;

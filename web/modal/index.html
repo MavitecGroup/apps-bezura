@@ -17,6 +17,7 @@
       --primary-hover: #2563eb;
       --success: #10b981;
     }
+    :root { color-scheme: dark; }
 
     * { box-sizing: border-box; }
 
@@ -173,6 +174,17 @@
     input:focus, select:focus { border-color: var(--primary); background: rgba(0, 0, 0, 0.3); box-shadow: 0 0 15px rgba(99, 102, 241, 0.2); }
 
     input:disabled, select:disabled { opacity: 0.6; cursor: not-allowed; background: rgba(255, 255, 255, 0.05); }
+
+    /* Dropdowns no mesmo padrão visual do painel (maior contraste). */
+    select option {
+      background: #17396f;
+      color: #f8fafc;
+    }
+    select option:checked,
+    select option:selected {
+      background: #2563eb;
+      color: #ffffff;
+    }
 
     /* Estilo para ícones de calendário e relógio */
     ::-webkit-calendar-picker-indicator {

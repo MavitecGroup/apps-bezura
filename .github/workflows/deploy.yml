@@ -12,12 +12,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      # Timeout na porta 22 entre runners do GitHub e a VPS é intermitente; timeout maior + 2ª tentativa reduz ruído.
       - name: Deploy via SSH
+        id: ssh_deploy
+        continue-on-error: true
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
+          timeout: 3m
+          command_timeout: 20m
           script_stop: true
           script: |
             set -euo pipefail
@@ -35,6 +40,46 @@ jobs:
             git rev-parse --short HEAD
             docker compose -f infra/docker-compose.vps.yml up -d --build
             docker compose -f infra/docker-compose.vps.yml up -d --force-recreate apps-bezura
+
+      - name: Deploy via SSH (retry)
+        id: ssh_deploy_retry
+        if: steps.ssh_deploy.outcome == 'failure'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          timeout: 3m
+          command_timeout: 20m
+          script_stop: true
+          script: |
+            set -euo pipefail
+            REPO="${{ secrets.DEPLOY_REPO_PATH }}"
+            if [ -z "$REPO" ]; then REPO=/home/vinicius/avisos-bezura; fi
+            if [ ! -d "$REPO/.git" ]; then
+              echo "::error::Repositório não encontrado em $REPO — clone o repo ou defina o secret DEPLOY_REPO_PATH."
+              exit 1
+            fi
+            cd "$REPO"
+            git stash push -u -m "auto-deploy-stash-$(date +%Y%m%d-%H%M%S)" || true
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
+            git rev-parse --short HEAD
+            docker compose -f infra/docker-compose.vps.yml up -d --build
+            docker compose -f infra/docker-compose.vps.yml up -d --force-recreate apps-bezura
+
+      - name: Verificar sucesso do SSH
+        if: always()
+        run: |
+          o1="${{ steps.ssh_deploy.outcome }}"
+          o2="${{ steps.ssh_deploy_retry.outcome }}"
+          if [ "$o1" = "success" ] || [ "$o2" = "success" ]; then
+            echo "Deploy SSH OK (tentativa: $o1, retry: $o2)."
+            exit 0
+          fi
+          echo "::error::SSH à VPS falhou (ex.: dial tcp :22 i/o timeout). Confirme SSH_HOST, Hetzner Cloud Firewall/UFW na porta 22, fail2ban e reexecute o workflow ou faça deploy manual na VPS."
+          exit 1
 
       - name: Validar produção (painel + assets)
         env:

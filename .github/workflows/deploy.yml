@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -34,7 +34,7 @@ jobs:
             git pull --ff-only origin main
             git rev-parse --short HEAD
             docker compose -f infra/docker-compose.vps.yml up -d --build
-            docker compose -f infra/docker-compose.vps.yml up -d --force-recreate cadastro-site
+            docker compose -f infra/docker-compose.vps.yml up -d --force-recreate apps-bezura
 
       - name: Validar produção (painel + assets)
         env:

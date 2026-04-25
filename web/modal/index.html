@@ -616,7 +616,7 @@
         <div class="form-row phone-datetime-row">
           <div class="input-group">
             <label>Nome do Lembrete</label>
-            <input type="text" id="rem-name" placeholder="Ex: Aviso de Cobrança">
+            <input type="text" id="rem-name" placeholder="Ex: Fechar a folha">
             <div id="rem-name-error" class="field-error"></div>
           </div>
           <div class="input-group">
@@ -669,7 +669,7 @@
             <div class="input-group">
               <label>Hora do envio diário</label>
               <input type="time" id="rem-time-daily">
-              <div class="freq-helper">O sistema agenda automaticamente para hoje ou amanhã, conforme o horário atual.</div>
+              <div class="freq-helper">O sistema agenda o início para hoje ou amanhã, dependendo do horário.</div>
             </div>
           </div>
           <div id="opt-weekly" class="freq-block">
@@ -707,7 +707,7 @@
         </div>
 
         <div class="input-group" id="group-template" style="display:none;">
-          <label>Modelo de Mensagem (API Oficial)</label>
+          <label>Modelo de Mensagem Agendada (API Oficial)</label>
           <select id="rem-template">
             <option value="">Selecione um modelo...</option>
           </select>
@@ -722,14 +722,14 @@
 
       <!-- TABELA: LEMBRETES ATIVOS -->
       <section class="table-card">
-        <h3>📅 Meus Lembretes</h3>
+        <h3>📅 Lembretes</h3>
         <div class="table-toolbar">
           <input id="filter-query" type="text" placeholder="Buscar por nome, destino ou mensagem...">
           <select id="filter-status">
             <option value="">Status (todos)</option>
             <option value="ativo">Ativo</option>
             <option value="pausado">Pausado</option>
-            <option value="enviado">Enviado</option>
+            <option value="enviado" disabled hidden data-future="true">Enviado</option>
           </select>
           <select id="filter-api">
             <option value="">Origem (todas)</option>
@@ -776,6 +776,7 @@
     /* CONFIGURATION - Substitua pela URL do seu Webhook n8n */
     const N8N_WEBHOOK_URL = "https://n8n.bezura.cloud/webhook/FhzponMMzHWYWQVG";
     let currentApiToken = "";
+    let currentClientId = "";
     let editingReminderId = null;
     let currentReminders = [];
     let filteredReminders = [];
@@ -819,6 +820,13 @@
       if (!token) return "---";
       if (token.length <= 9) return token;
       return token.substring(0, 9) + "**********";
+    }
+
+    function maskClientId(clientId) {
+      const value = String(clientId || "").trim();
+      if (!value) return "---";
+      if (value.length <= 4) return "*".repeat(value.length);
+      return `${value.slice(0, 2)}${"*".repeat(Math.max(4, value.length - 4))}${value.slice(-2)}`;
     }
 
     function formatReminderDate(reminder) {
@@ -878,7 +886,8 @@
       const nextDate = getReminderDate(reminder);
 
       if (q) {
-        const hay = `${reminder.nome || ""} ${reminder.destino || ""} ${stripReminderRid(reminder.mensagem || "")}`.toLowerCase();
+        const cleanMsg = stripReminderHeader(stripReminderRid(reminder.mensagem || ""));
+        const hay = `${reminder.nome || ""} ${reminder.destino || ""} ${cleanMsg}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       if (currentReminderFilters.status && status !== currentReminderFilters.status) return false;
@@ -919,7 +928,7 @@
             <td>
               <div class="td-main">
                 <span>${r.nome || "-"}</span>
-                <span class="td-sub">${stripReminderRid(r.mensagem || "").slice(0, 70) || "-"}</span>
+                <span class="td-sub">${stripReminderHeader(stripReminderRid(r.mensagem || "")).slice(0, 70) || "-"}</span>
               </div>
             </td>
             <td>
@@ -969,6 +978,19 @@
 
     function stripReminderRid(message) {
       return String(message || "").replace(/\|\|\|RID:[a-zA-Z0-9_-]+$/, "");
+    }
+
+    function addReminderHeader(message) {
+      const body = String(message || "").trim();
+      const header = "*⚠️ Lembrete Bezura*";
+      if (!body) return header;
+      if (body.startsWith(header)) return body;
+      return `${header}\n\n${body}`;
+    }
+
+    function stripReminderHeader(message) {
+      const headerRegex = /^\*⚠️ Lembrete Bezura\*\s*\n*/;
+      return String(message || "").replace(headerRegex, "").trimStart();
     }
 
     function withReminderRid(message, rid) {
@@ -1103,7 +1125,7 @@
       document.getElementById('rem-time-daily').value = reminder.hora || "";
       document.getElementById('rem-time-weekly').value = reminder.hora || "";
       document.getElementById('rem-time-monthly').value = reminder.hora || "";
-      document.getElementById('rem-msg').value = stripReminderRid(reminder.mensagem || "");
+      document.getElementById('rem-msg').value = stripReminderHeader(stripReminderRid(reminder.mensagem || ""));
       document.getElementById('rem-month-interval').value = reminder.intervalo_mes || "1";
       document.getElementById('rem-month-day').value = reminder.dia_mes || "";
       document.getElementById('rem-template').value = reminder.template_id || "";
@@ -1156,7 +1178,7 @@
       const groupMessage = document.getElementById('group-message');
       const templateSelect = document.getElementById('rem-template');
       const msgInput = document.getElementById('rem-msg');
-      const clientId = document.getElementById('header-id').textContent;
+      const clientId = currentClientId;
       const meta = getSelectedOriginMeta();
 
       if (meta.isOfficial) {
@@ -1287,7 +1309,8 @@
       loginCard.style.display = 'none';
       dashContent.style.display = 'grid';
       dashHeader.style.display = 'flex';
-      headerId.textContent = clientId;
+      currentClientId = clientId || "";
+      headerId.textContent = maskClientId(clientId);
       headerToken.textContent = maskToken(token || "");
       currentApiToken = token || "";
 
@@ -1419,7 +1442,7 @@
     /* REMINDER ACTIONS */
     async function scheduleReminder() {
       const btn = document.getElementById('btn-save-rem');
-      const clientId = document.getElementById('header-id').textContent;
+      const clientId = currentClientId;
       const freq = document.getElementById('rem-freq').value;
       const selectedMeta = getSelectedOriginMeta();
       const selectedTemplateId = document.getElementById('rem-template').value || "";
@@ -1428,7 +1451,7 @@
       const existingRid = extractReminderRid(editingReminder?.mensagem || "");
       const generatedRid = existingRid || `${Date.now()}${Math.floor(Math.random() * 1000)}`;
       const baseMessage = selectedMeta.isOfficial ? (selectedTemplate?.text || "") : document.getElementById('rem-msg').value;
-      const finalMessage = withReminderRid(baseMessage, generatedRid);
+      const finalMessage = withReminderRid(addReminderHeader(baseMessage), generatedRid);
 
       if (selectedMeta.isOfficial && !selectedTemplateId) {
         alert("⚠️ Selecione um modelo de mensagem para API oficial.");
@@ -1510,7 +1533,7 @@
 
       const action = target.dataset.action;
       const reminderId = Number(target.dataset.id);
-      const clientId = document.getElementById('header-id').textContent;
+      const clientId = currentClientId;
       const reminder = currentReminders.find(r => Number(r.id) === reminderId);
       if (!reminder) return;
 
